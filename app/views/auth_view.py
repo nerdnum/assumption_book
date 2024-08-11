@@ -8,12 +8,12 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from passlib.context import CryptContext
 from datetime import datetime, timedelta, UTC
 
-from app.sqlalchemy_models.user import User as SqlUser
+from app.sqlalchemy_models.users_sql import User as SqlUser
 
 import jwt
 from jwt.exceptions import InvalidTokenError
 from pydantic import BaseModel
-from app.pydantic_models.user import User, UserInDB
+from app.pydantic_models.user_model import User, UserInDB
 from app.services.database import sessionmanager, get_db
 from app.config import get_config
 

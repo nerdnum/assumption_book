@@ -1,0 +1,49 @@
+GET http://localhost:8000/api/v1/projects
+
+
+###
+GET http://localhost:8000/api/v1/projects/aman/components
+
+
+###
+GET http://localhost:8000/api/v1/projects/7/components/60/descendants
+
+
+###
+POST http://localhost:8000/api/v1/projects/9/components/79
+Content-Type: application/json
+
+{
+  "title": "Stackers",
+  "description": "This is about stack",
+  "level": 2
+}
+
+###
+GET http://localhost:8000/api/v1/projects/8/components/root-components
+
+
+###
+GET http://localhost:8000/api/v1/projects/8/components/hierarchy
+
+
+###
+GET http://localhost:8000/api/v1/projects/aman/components/power-generation
+
+
+###
+PUT http://localhost:8000/api/v1/components/20
+Content-Type: application/json
+
+{
+  "project_id": 5,
+  "parent_id": 19,
+  "level": 1,
+  "title": "Subcomponent 1",
+  "description": "Description of subcomponent 1",
+  "is_template": false
+}
+
+
+###
+GET http://localhost:8000/api/v1/projects/amun/components/10

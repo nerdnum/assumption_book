@@ -36,7 +36,7 @@ async def setup_db(test_app):
 
 
 @pytest_asyncio.fixture(scope='function')
-async def db(setup_db):
+async def db(setup_db, test_app):
     async with sessionmanager.session() as session:
         # Created and yield session
         yield session

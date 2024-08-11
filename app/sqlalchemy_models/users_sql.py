@@ -47,8 +47,8 @@ class User(BaseEntity):
     async def create(cls, db: AsyncSession, username: str, full_name: str, email: str) -> "User":
         user = cls(username=username, full_name=full_name,
                    email=email, uuid=str(uuid4()))
-        db.add(user)
         try:
+            db.add(user)
             await db.commit()
             await db.refresh(user)
         except IntegrityError as error:
@@ -107,6 +107,8 @@ class User(BaseEntity):
     async def delete(cls, db: AsyncSession, id: int) -> None:
         try:
             user = await cls.get(db, id)
+            if user is None:
+                raise NoResultFound
             await db.delete(user)
             await db.commit()
         except NoResultFound:

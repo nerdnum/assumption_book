@@ -4,21 +4,21 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 # App imports
 from app.services.database import get_db
-from app.sqlalchemy_models.user import User as SqlUser
-from app.sqlalchemy_models.user import Role as SqlRole
-from app.pydantic_models.user import RoleCreate, RoleUpdate, Role, RoleWithUsers
+from app.sqlalchemy_models.users_sql import User as SqlUser
+from app.sqlalchemy_models.users_sql import Role as SqlRole
+from app.pydantic_models.user_model import RoleCreate, RoleUpdate, Role, RoleWithUsers
 from typing import Any
 
 router = APIRouter(prefix="/roles", tags=["roles"])
 
 
-@router.get("/", response_model=list[Role])
+@router.get("", response_model=list[Role])
 async def get_all_roles(db: AsyncSession = Depends(get_db)):
     roles = await SqlRole.get_all(db)
     return roles
 
 
-@router.post("/", response_model=Role, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=Role, status_code=status.HTTP_201_CREATED)
 async def create_role(role: RoleCreate, db: AsyncSession = Depends(get_db)):
     try:
         role_in_db = await SqlRole.create(db, role.name, role.description)

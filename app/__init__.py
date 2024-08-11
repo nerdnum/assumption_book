@@ -1,8 +1,11 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 
 from app.config import config_manager, get_config
 from app.services.database import sessionmanager
+
+# Temporary imports for development
+from fastapi.middleware.cors import CORSMiddleware
 
 
 def init_app(config_file: str = 'config.json'):
@@ -23,13 +26,50 @@ def init_app(config_file: str = 'config.json'):
     if config['config_name'] == "testing":
         server.title = "testing"
 
-    from app.views.auth import router as auth_router
-    server.include_router(auth_router, prefix="/api", tags=["auth"])
+    server.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
-    from app.views.users import router as user_router
-    server.include_router(user_router, prefix="/api", tags=["users"])
+    # from app.views.projects import router as project_router
+    # server.include_router(project_router, prefix="/api/v1", tags=["projects"])
 
-    from app.views.roles import router as role_router
-    server.include_router(role_router, prefix="/api", tags=["roles"])
+    # top_router = APIRouter(prefix="/api/v1/{projectSlug}")
+
+    # from app.views.components import router as component_router
+    # top_router.include_router(component_router)
+
+    # server.include_router(top_router)
+
+    from app.views.components_view_project_id import router as id_component_router
+    from app.views.components_view_project_slug import router as slug_component_router
+
+    from app.views.projects_view import router as project_router
+    project_router.include_router(
+        id_component_router, prefix="/{project_id:int}", tags=["components"], )
+
+    project_router.include_router(
+        slug_component_router, prefix="/{project_slug:str}", tags=["components"])
+
+    server.include_router(project_router, prefix='/api/v1', tags=["projects"])
+
+    from app.views.auth_view import router as auth_router
+    server.include_router(auth_router, prefix="/api/v1", tags=["auth"])
+
+    from app.views.users_view import router as user_router
+    server.include_router(user_router, prefix="/api/v1", tags=["users"])
+
+    from app.views.roles_view import router as role_router
+    server.include_router(role_router, prefix="/api/v1", tags=["roles"])
+
+    from app.views.element_types import router as element_type_router
+    server.include_router(element_type_router,
+                          prefix="/api/v1", tags=["element_types"])
+
+    from app.views.elements import router as element_router
+    server.include_router(element_router, prefix="/api/v1", tags=["elements"])
 
     return server

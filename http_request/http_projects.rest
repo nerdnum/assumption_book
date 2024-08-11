@@ -1,0 +1,37 @@
+###
+GET http://localhost:8000/api/v1/projects
+
+
+
+###
+POST http://localhost:8000/api/v1/projects
+Content-Type: application/json
+
+{
+    "title": "Amun",
+    "description": "This imaginary project contains all the template components",
+    "project_manager": "System Administrator"
+}
+
+###
+GET http://localhost:8000/api/v1/projects/9
+
+
+###
+GET http://localhost:8000/api/v1/projects/8/components
+
+
+###
+PUT http://localhost:8000/api/v1/projects/1
+Content-Type: application/json
+
+{
+    "description": "A very late update 2024-06-25"
+}
+
+###
+DELETE http://localhost:8000/api/v1/projects/1
+
+
+###
+GET http://localhost:8000/api/v1/projects/aman

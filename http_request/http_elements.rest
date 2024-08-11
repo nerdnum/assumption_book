@@ -1,0 +1,48 @@
+###
+GET http://localhost:8000/api/element_types/
+
+
+###
+GET http://localhost:8000/api/projects/
+
+###
+GET http://localhost:8000/api/projects/5
+
+
+###
+GET http://localhost:8000/api/elements/
+
+
+###
+POST http://localhost:8000/api/elements/
+Content-Type: application/json
+
+{
+                "title": "Element 1",
+                "description": "Element 1 Description",
+                "project_id": 1,
+                "element_type_id": 1
+            }
+
+
+###
+POST http://localhost:8000/api/elements/
+Content-Type: application/json
+
+{
+    "title": "Power Generation",
+    "description": "Wind power generation and solar power generation",
+    "project_id": 5,
+    "element_type_id": 2
+}
+
+###
+PUT http://localhost:8000/api/elements/3
+Content-Type: application/json
+
+{
+    "element_type_id": 99
+}
+
+###
+DELETE http://localhost:8000/api/elements/11

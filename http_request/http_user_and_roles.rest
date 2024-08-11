@@ -13,9 +13,9 @@ POST http://localhost:8000/api/users/
 content-type: application/json
 
 {
-  "username": "Mary",
-  "email": "mary@example.com",
-  "full_name": "Mary Poppins"
+  "username": "John",
+  "email": "John@example.com",
+  "full_name": "John Doe"
 }
 
 ### Get all users
@@ -36,7 +36,7 @@ content-type: application/json
 
 
 ###
-DELETE http://localhost:8000/api/users/8
+DELETE http://localhost:8000/api/users/23
 
 
 ### Get specific user
@@ -149,6 +149,9 @@ username=Mary&password=test1234
 ###
 GET http://localhost:8000/api/auth/me
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJNYXJ5IiwiZXhwIjoxNzE3NDIwNDE5fQ.e7dHjNkjCICDrcc0rLa5-0ejWDQcy689fqBee1q2c3Q
+
+###
+PUT http://localhost:8000/api/users/activate/18
 
 
 

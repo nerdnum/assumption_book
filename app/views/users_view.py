@@ -4,8 +4,8 @@ from uuid import uuid4
 
 from app.config import get_config
 from app.services.database import get_db
-from app.pydantic_models.user import User, UserCreate, UserUpdate, UserWithRoles
-from app.sqlalchemy_models.user import User as SqlUser, Role as SqlRole
+from app.pydantic_models.user_model import User, UserCreate, UserUpdate, UserWithRoles
+from app.sqlalchemy_models.users_sql import User as SqlUser, Role as SqlRole
 from typing import Any
 
 
@@ -13,13 +13,13 @@ config = get_config()
 router = APIRouter(prefix="/users", tags=["users"])
 
 
-@router.get("/", response_model=list[User])
+@router.get("", response_model=list[User])
 async def get_users(db: AsyncSession = Depends(get_db)):
     users = await SqlUser.get_all(db)
     return users
 
 
-@router.post("/", response_model=User, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=User, status_code=status.HTTP_201_CREATED)
 async def create_user(user: UserCreate, db: AsyncSession = Depends(get_db)):
     try:
         user = await SqlUser.create(db, user.username, user.full_name, user.email)
@@ -50,14 +50,14 @@ async def update_user(id: int, user: UserUpdate, db: AsyncSession = Depends(get_
     return user
 
 
-@router.delete("/{id}", response_model=Any)
+@router.delete("/{id}", response_model=None)
 async def delete_user(id: int, db: AsyncSession = Depends(get_db)):
     try:
-        user = await SqlUser.delete(db, id)
+        result = await SqlUser.delete(db, id)
     except ValueError as error:
         raise HTTPException(
             status_code=400, detail=str(error))
-    return user
+    return result
 
 
 @router.get("/username/{username}", response_model=User)

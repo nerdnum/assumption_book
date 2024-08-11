@@ -1,0 +1,50 @@
+###
+GET http://localhost:8000/api/element_types/
+
+
+###
+POST http://localhost:8000/api/element_types/
+Content-Type: application/json
+
+{
+    "title": "Ammonia Plant",
+    "description": "An ammonia plant element",
+    "default_text": "This is a deeper description of the ammonia plant element"
+}
+
+###
+POST http://localhost:8000/api/element_types/
+Content-Type: application/json
+
+{
+    "title": "Power Generation",
+    "description": "This is a power generation element",
+    "default_text": "This is a deeper description of the power generation element"
+}
+
+
+###
+POST http://localhost:8000/api/element_types/
+Content-Type: application/json
+
+{
+    "title": "Test Element for deletion",
+    "description": "Deletion element",
+    "default_text": "Deletion elememt"
+}
+
+###
+GET http://localhost:8000/api/element_types/4
+
+
+###
+PUT http://localhost:8000/api/element_types/4
+Content-Type: application/json
+
+{
+    "default_text": "Deletion item's default text is updated!"
+}
+
+
+###
+DELETE http://localhost:8000/api/element_types/4

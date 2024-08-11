@@ -1,4 +1,4 @@
-from app.sqlalchemy_models import user
+from app.sqlalchemy_models import users_sql
 from app.config import config as app_config
 from app.services.database import Base
 

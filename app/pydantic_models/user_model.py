@@ -1,10 +1,11 @@
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import Optional
 from pydantic import EmailStr
 from pydantic.types import UUID4
+from fastapi_camelcase import CamelModel
 
 
-class UserBase(BaseModel):
+class UserBase(CamelModel):
     username: str
     email: EmailStr
     full_name: str

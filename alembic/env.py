@@ -1,5 +1,6 @@
 import asyncio
 from logging.config import fileConfig
+import json
 
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
@@ -7,14 +8,19 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
 
-from app.sqlalchemy_models import user
-from app.config import config as app_config
+from app.sqlalchemy_models import components_sql, element_types, elements, projects_sql, users_sql
+from app.config import get_config
 from app.services.database import Base
+
+# get the app config from the json file
+with open("config.json") as f:
+    app_config = json.load(f)
+
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
-config.set_main_option("sqlalchemy.url", app_config["main_db_url"])
+config.set_main_option("sqlalchemy.url", app_config["db_url"])
 target_metadata = Base.metadata
 
 # Interpret the config file for Python logging.
