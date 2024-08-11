@@ -1,0 +1,9 @@
+1. Components and projects will not be accessible by slugs - slugs will be managed in the front end
+2024-08-11 - Projects/Components have similar subcomponents, for example, an electrolyser may have serveral compressors. 
+In the DB each compressor will have a diffent row ID, but the same title. Additionally, compressors for a single electrolyser
+may exist on different levels. Thus trying to create a unique slug for every item, is not really possible, unless of course 
+you simply generate a unique key, but that defeats the object of an slug - being a human readable identifier. 
+
+A REST API is stateless, it works without context. So generating a slug within a context for storage in the DB simply does
+not make sense. However in the frontend, everything happens winthin a certain context. As such, it may be possible to generate
+context sensitive slug in the frontend. 
