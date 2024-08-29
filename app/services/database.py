@@ -1,28 +1,33 @@
 import contextlib
-from typing import AsyncIterator
-from fastapi import Depends
-from sqlalchemy.ext.asyncio import (
-    AsyncConnection, AsyncEngine, AsyncSession,
-    async_sessionmaker, create_async_engine
-)
-from sqlalchemy.orm import Mapped, mapped_column, declarative_base
-from sqlalchemy import Column, String, Integer, DateTime
-from sqlalchemy_utc import UtcDateTime, utcnow
-from sqlalchemy.sql import func
 from datetime import datetime
-from typing import Optional
+from typing import AsyncIterator, Optional
+
+from sqlalchemy import Integer, String
+from sqlalchemy.ext.asyncio import (
+    AsyncConnection,
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
+from sqlalchemy.orm import Mapped, declarative_base, mapped_column
+from sqlalchemy_utc import UtcDateTime, utcnow
 
 Base = declarative_base()
 
 
 class SubBaseEntity(Base):
     __abstract__ = True
-    id: Mapped[int] = mapped_column(
-        Integer, primary_key=True, autoincrement=True)
-    created_at: Mapped[datetime] = mapped_column(UtcDateTime(timezone=True),
-                                                 nullable=False, server_default=utcnow())
-    updated_at: Mapped[datetime] = mapped_column(UtcDateTime(timezone=True), nullable=False,
-                                                 server_default=utcnow(), onupdate=utcnow())
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    created_at: Mapped[datetime] = mapped_column(
+        UtcDateTime(timezone=True), nullable=False, server_default=utcnow()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        UtcDateTime(timezone=True),
+        nullable=False,
+        server_default=utcnow(),
+        onupdate=utcnow(),
+    )
 
 
 class BaseEntity(SubBaseEntity):
@@ -39,8 +44,7 @@ class DatabaseSessionManager:
     def init(self, host: str, comment: str = None):
         self._comment = comment
         self._engine = create_async_engine(host)
-        self._sessionmaker = async_sessionmaker(
-            autocommit=False, bind=self._engine)
+        self._sessionmaker = async_sessionmaker(autocommit=False, bind=self._engine)
         self._init_done = True
 
     def init_done(self):
@@ -57,8 +61,7 @@ class DatabaseSessionManager:
     @contextlib.asynccontextmanager
     async def connect(self) -> AsyncIterator[AsyncConnection]:
         if self._engine is None:
-            raise RuntimeError(
-                "Connect: DatabaseSessionManager is not initialized")
+            raise RuntimeError("Connect: DatabaseSessionManager is not initialized")
 
         async with self._engine.begin() as connection:
             try:
@@ -70,8 +73,7 @@ class DatabaseSessionManager:
     @contextlib.asynccontextmanager
     async def session(self) -> AsyncIterator[AsyncSession]:
         if self._sessionmaker is None:
-            raise RuntimeError(
-                "Session: DatabaseSessionManager is not initialized")
+            raise RuntimeError("Session: DatabaseSessionManager is not initialized")
 
         session = self._sessionmaker()
         try:

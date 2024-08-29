@@ -1,13 +1,11 @@
-from sqlalchemy import String, Integer, Boolean, ForeignKey, select
-from sqlalchemy.exc import IntegrityError, NoResultFound
-from sqlalchemy.orm import Mapped, mapped_column, relationship, backref, selectinload
-from sqlalchemy.ext.asyncio import AsyncSession, AsyncAttrs
-from sqlalchemy import func
 from uuid import uuid4
-from slugify import slugify
-from typing import Union
 
-from app.services.database import BaseEntity, sessionmanager
+from sqlalchemy import ForeignKey, Integer, String, func, select
+from sqlalchemy.exc import NoResultFound
+from sqlalchemy.ext.asyncio import AsyncAttrs
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.services.database import BaseEntity
 from app.services.utils import translate_exception
 from app.sqlalchemy_models.projects_sql import Project as SqlProject
 
@@ -17,59 +15,81 @@ class Component(AsyncAttrs, BaseEntity):
     # id, uuid, created_at, updated_at is in the BaseEntity
     parent_id = mapped_column(ForeignKey("components.id"))
     project_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("projects.id"), nullable=True)
+        Integer, ForeignKey("projects.id"), nullable=True
+    )
     title: Mapped[str] = mapped_column(String, nullable=False)
     uuid: Mapped[str] = mapped_column(String, nullable=False)
-    slug: Mapped[str] = mapped_column(String, nullable=True)
     level: Mapped[int] = mapped_column(Integer, nullable=False)
     description: Mapped[str] = mapped_column(String)
     sequence: Mapped[int] = mapped_column(Integer, nullable=False)
     # is_template: Mapped[bool] = mapped_column(
     #     Boolean, nullable=False, default=False)
-    descendants: Mapped[list["Component"]] = relationship(
-        "Component")
+    descendants: Mapped[list["Component"]] = relationship("Component")
 
     # This check were moved to Pydantic Validations
     # __table_args__ = (
     #     UniqueConstraint("parent_id", "title"),
     #     CheckConstraint('length(title) > 5', name='title_length'), )
 
-    @ classmethod
+    @classmethod
     async def get_all(cls, db, project_id: int):
-        return (await db.execute(select(cls).where(cls.project_id == project_id))).scalars().all()
+        return (
+            (await db.execute(select(cls).where(cls.project_id == project_id)))
+            .scalars()
+            .all()
+        )
 
     @classmethod
     async def get_root_components(cls, db, project_id: int):
-        return (await db.execute(select(cls)
-                                 .where(cls.project_id == project_id)
-                                 .where(cls.parent_id == None)
-                                 .order_by(cls.sequence))).scalars().all()
+        return (
+            (
+                await db.execute(
+                    select(cls)
+                    .where(cls.project_id == project_id)
+                    .where(cls.parent_id == None)
+                    .order_by(cls.sequence)
+                )
+            )
+            .scalars()
+            .all()
+        )
 
-    @ classmethod
-    async def create(cls, db, project_id: int, parent_id: int,
-                     title: str, level: int, slug: str = None,
-                     sequence: int = None, description: str = None
-                     ) -> "Component":
+    @classmethod
+    async def create(
+        cls,
+        db,
+        project_id: int,
+        parent_id: int,
+        title: str,
+        level: int,
+        sequence: int = None,
+        description: str = None,
+    ) -> "Component":
 
         project = await SqlProject.get_by_id(db, project_id)
 
         if sequence is None:
-            max_sequence = (await db.execute(select(func.max(cls.sequence))
-                                             .where(cls.project_id == project.id)
-                                             .where(cls.parent_id == parent_id))).scalar_one()
+            max_sequence = (
+                await db.execute(
+                    select(func.max(cls.sequence))
+                    .where(cls.project_id == project.id)
+                    .where(cls.parent_id == parent_id)
+                )
+            ).scalar_one()
             if max_sequence is None:
                 max_sequence = 0
         else:
             max_sequence = sequence
 
-        component = cls(project_id=project_id,
-                        parent_id=parent_id,
-                        title=title,
-                        slug=slug,
-                        level=level,
-                        sequence=max_sequence + 1,
-                        description=description,
-                        uuid=str(uuid4()))
+        component = cls(
+            project_id=project_id,
+            parent_id=parent_id,
+            title=title,
+            level=level,
+            sequence=max_sequence + 1,
+            description=description,
+            uuid=str(uuid4()),
+        )
         try:
             db.add(component)
             await db.commit()
@@ -80,7 +100,7 @@ class Component(AsyncAttrs, BaseEntity):
             raise exception
         return component
 
-    @ classmethod
+    @classmethod
     async def get_by_id(cls, db, component_id: int) -> "Component":
         # Component id is unique in the datatable so project_id is irrelevant
         try:
@@ -94,37 +114,6 @@ class Component(AsyncAttrs, BaseEntity):
             exception = translate_exception(__name__, "get", error)
             raise exception
         return component
-
-    @classmethod
-    async def get_by_slug(cls, db, project_id: int, slug: str) -> "Component":
-        try:
-            component = (await db.execute(select(cls)
-                                          .where(cls.project_id == project_id)
-                                          .where(cls.slug == slug))).scalar_one()
-            if component is None:
-                raise NoResultFound
-        except NoResultFound:
-            raise ValueError("component not found")
-        except Exception as error:
-            exception = translate_exception(__name__, "get", error)
-            raise exception
-        return component
-
-    @classmethod
-    async def get_id_by_slug(cls, db, project_id: int, slug: str) -> "Component":
-        try:
-            # Slug is only unique within a project
-            component = (await db.execute(select(cls)
-                                          .where(cls.project_id == project_id)
-                                          .where(cls.slug == slug))).scalar_one()
-            if component is None:
-                raise NoResultFound
-        except NoResultFound:
-            raise ValueError("component not found")
-        except Exception as error:
-            exception = translate_exception(__name__, "get", error)
-            raise exception
-        return component.id
 
     # 2024-06-30 although I am convinced that these worked before,
     # it does not anymore. It runs into a recursion error:
@@ -153,24 +142,20 @@ class Component(AsyncAttrs, BaseEntity):
     # def __str__(self):
     #     return f"Component {self.id}: {self.title}"
 
-    # @ classmethod
-    # async def get_with_descendants_by_slug(cls, db, project_id: int, component_slug: str) -> "Component":
-    #     try:
-    #         component = (await db.execute(select(cls)
-    #                                       .where(cls.project_id == project_id)
-    #                                       .where(cls.slug == component_slug).options(selectinload(cls.descendants)))).scalar_one()
-    #         if component is None:
-    #             raise NoResultFound
-    #     except NoResultFound:
-    #         raise ValueError("component not found")
-    #     except Exception as error:
-    #         exception = translate_exception(__name__, "get", error)
-    #         raise exception
-    #     return component
-
     @classmethod
-    async def update(cls, db, component_id: int, id: int, uuid: str, title: str = None, project_id: int = None, sequence: int = None,
-                     level: int = None, parent_id: int = None, slug: str = None, description: str = None) -> "Component":
+    async def update(
+        cls,
+        db,
+        component_id: int,
+        id: int,
+        uuid: str,
+        title: str = None,
+        project_id: int = None,
+        sequence: int = None,
+        level: int = None,
+        parent_id: int = None,
+        description: str = None,
+    ) -> "Component":
         component = await cls.get_by_id(db, component_id)
 
         if title is not None:
@@ -184,9 +169,6 @@ class Component(AsyncAttrs, BaseEntity):
 
         if parent_id is not None:
             component.parent_id = parent_id
-
-        if slug is not None:
-            component.slug = slug
 
         if description is not None:
             component.description = description
@@ -202,8 +184,6 @@ class Component(AsyncAttrs, BaseEntity):
             exception = translate_exception(__name__, "update", error)
             raise exception
         return component
-
-    # TODO delete by slug vs delete by id
 
     @classmethod
     async def delete(cls, db, component_id: int) -> "Component":
@@ -221,10 +201,17 @@ class Component(AsyncAttrs, BaseEntity):
     @classmethod
     async def get_descendants(cls, db, component_id: int) -> list["Component"]:
         try:
-            descendants = (await db.execute(select(cls)
-                                            .where(cls.parent_id == component_id)
-                                            .order_by(cls.level, cls.sequence)
-                                            )).scalars().all()
+            descendants = (
+                (
+                    await db.execute(
+                        select(cls)
+                        .where(cls.parent_id == component_id)
+                        .order_by(cls.level, cls.sequence)
+                    )
+                )
+                .scalars()
+                .all()
+            )
         except NoResultFound:
             raise ValueError("component not found")
         return descendants

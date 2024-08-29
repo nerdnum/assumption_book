@@ -1,0 +1,66 @@
+###
+POST http://localhost:8000/api/v1/documents
+Content-Type: application/json
+
+{
+  "id": 1,
+  "projectId": 10,
+  "componentId": 11,
+  "title": "Introduction",
+  "sequence": 1,
+  "content": {
+    "type": "doc",
+    "content": [
+      {
+        "type": "heading",
+        "attrs": {
+          "id": "38a5ceaa-cedf-458f-a9ce-11506afb0cd2",
+          "level": 2,
+          "checksum": "0d1374ebcb161d51f387d6d1a2cb35e4"
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "Heading"
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "attrs": {
+          "id": "7bbe4c7e-fe84-45a1-af60-148458794660",
+          "checksum": "84e389b41591654ff867dce003a54c8d"
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "This is default text for intialization"
+          }
+        ]
+      }
+    ]
+  }
+}
+
+###
+GET http://localhost:8000/api/v1/documents?project_id=8&component_id=74
+
+
+###
+POST http://localhost:8000/api/v1/documents
+Content-Type: application/json
+
+{
+  "projectId": 10,
+  "componentId": 11,
+  "title": "Introduction",
+  "sequence": 1
+}
+
+###
+POST http://localhost:8000/api/v1/documents
+Content-Type: application/json
+
+{
+  "title": "Introduction"
+}

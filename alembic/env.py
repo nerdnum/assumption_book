@@ -1,16 +1,22 @@
 import asyncio
-from logging.config import fileConfig
 import json
+from logging.config import fileConfig
 
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
-
-from app.sqlalchemy_models import components_sql, element_types, elements, projects_sql, users_sql
 from app.config import get_config
 from app.services.database import Base
+from app.sqlalchemy_models import (
+    components_sql,
+    document_sql,
+    element_types,
+    elements,
+    projects_sql,
+    users_sql,
+)
 
 # get the app config from the json file
 with open("config.json") as f:
