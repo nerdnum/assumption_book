@@ -46,7 +46,8 @@ class Component(AsyncAttrs, BaseEntity):
                 await db.execute(
                     select(cls)
                     .where(cls.project_id == project_id)
-                    .where(cls.parent_id == None)
+                    # this format is required by sqlalchemy, "is None" does not work
+                    .where(cls.parent_id == None)  # noqa: E711
                     .order_by(cls.sequence)
                 )
             )
@@ -96,7 +97,9 @@ class Component(AsyncAttrs, BaseEntity):
             await db.refresh(component)
         except Exception as error:
             await db.rollback()
-            exception = translate_exception(__name__, "create", error)
+            exception = translate_exception(
+                __name__, "create", error
+            )  # may not work for project yet!
             raise exception
         return component
 
@@ -105,12 +108,11 @@ class Component(AsyncAttrs, BaseEntity):
         # Component id is unique in the datatable so project_id is irrelevant
         try:
             component = await db.get(cls, component_id)
-
             if component is None:
-                raise NoResultFound
-        except NoResultFound:
-            raise ValueError("component not found")
+                raise ValueError("Component not found")
         except Exception as error:
+            if type(error) is ValueError:
+                raise error
             exception = translate_exception(__name__, "get", error)
             raise exception
         return component

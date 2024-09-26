@@ -1,4 +1,7 @@
+import pprint
+
 from sqlalchemy.exc import IntegrityError
+
 from app.services.database import sessionmanager
 from app.sqlalchemy_models.projects_sql import Project
 
@@ -38,7 +41,6 @@ def translate_exception(filename: str, method: str, exception: Exception) -> Exc
                 {
                     "text": 'insert or update on table "components" violates foreign key constraint "components_parent_id_fkey"',
                     "response": "The referenced parent component does not exist",
-
                 },
                 {
                     "text": 'insert or update on table "components" violates foreign key constraint "components_project_id_fkey',
@@ -47,7 +49,7 @@ def translate_exception(filename: str, method: str, exception: Exception) -> Exc
                 {
                     "text": 'duplicate key value violates unique constraint "components_parent_id_title_key"',
                     "response": "A component with the same title already exists for the parent component",
-                }
+                },
             ]
         }
     }
@@ -72,7 +74,13 @@ async def get_project(project_id: int):
 
 async def get_parent(component_id: int):
     from app.sqlalchemy_models.components_sql import Component
+
     async with sessionmanager.session() as db:
         parent = await db.get(Component, component_id)
         return parent
     return False
+
+
+def pretty_print(data):
+    pp = pprint.PrettyPrinter(indent=4)
+    pp.pprint(data)

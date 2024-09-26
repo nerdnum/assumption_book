@@ -4,6 +4,7 @@ from fastapi import FastAPI
 
 # Temporary imports for development
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.config import config_manager, get_config
 from app.services.database import sessionmanager
@@ -54,6 +55,12 @@ def init_app(config_file: str = "config.json"):
         tags=["components"],
     )
 
+    server.mount(
+        "/api/v1/static",
+        StaticFiles(directory="app/static", html=True),
+        name="static",
+    )
+
     server.include_router(project_router, prefix="/api/v1", tags=["projects"])
 
     from app.views.auth_view import router as auth_router
@@ -68,13 +75,13 @@ def init_app(config_file: str = "config.json"):
 
     server.include_router(role_router, prefix="/api/v1", tags=["roles"])
 
-    from app.views.element_types import router as element_type_router
+    from app.views.setting_types_view import router as setting_type_router
 
-    server.include_router(element_type_router, prefix="/api/v1", tags=["element_types"])
+    server.include_router(setting_type_router, prefix="/api/v1", tags=["setting_types"])
 
-    from app.views.elements import router as element_router
+    from app.views.settings_view import router as setting_router
 
-    server.include_router(element_router, prefix="/api/v1", tags=["elements"])
+    server.include_router(setting_router, prefix="/api/v1", tags=["settings"])
 
     from app.views.documents_view import router as document_router
 

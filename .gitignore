@@ -37,3 +37,5 @@ config.json
 test_config.json
 
 .coverage
+
+zz_backup

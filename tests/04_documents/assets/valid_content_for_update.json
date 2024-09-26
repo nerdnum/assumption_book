@@ -1,0 +1,41 @@
+{
+  "type": "doc",
+  "content": [
+    {
+      "type": "paragraph",
+      "attrs": {
+        "id": "fc56b148-e810-4dfe-b224-5d91aa58f34d"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Go straight to jail. Do not pass begin."
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "attrs": {
+        "id": "2f0df557-0a54-4532-81bd-5f804cbc43c1"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Throw the dice."
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "attrs": {
+        "id": "0699ab20-68b5-4a2f-b7be-450bd9ec65c8"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "You've won $50."
+        }
+      ]
+    }
+  ]
+}

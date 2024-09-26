@@ -7,15 +7,15 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
-from app.config import get_config
+from app.config import get_config  # noqa
 from app.services.database import Base
 from app.sqlalchemy_models import (
-    components_sql,
-    document_sql,
-    element_types,
-    elements,
-    projects_sql,
-    users_sql,
+    components_sql,  # noqa
+    documents_sql,  # noqa
+    projects_sql,  # noqa
+    setting_types_sql,  # noqa
+    settings_sql,  # noqa
+    users_sql,  # noqa
 )
 
 # get the app config from the json file

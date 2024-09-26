@@ -178,11 +178,11 @@ async def test_read_none_existant_component_with_id(client, get_projects):
     # project_a - comp(id:1, lvl:0)
     #           + comp(id:2, lvl:0)
     # project_b
-    project_id = get_projects["project_a"]["id"]
+    project_id = get_projects["project_a"]["id"]  # type: ignore
 
     response = await client.get(f"/projects/{project_id}/components/99")
     assert response.status_code == 400
-    assert response.json() == {"detail": "component not found"}
+    assert response.json() == {"detail": "Component not found"}
 
 
 @pytest.mark.asyncio
@@ -1128,7 +1128,7 @@ async def test_delete_nonexistent_component(client, get_projects):
     project_id = get_projects["project_a"]["id"]
     response = await client.delete(f"/projects/{project_id}/components/99")
     assert response.status_code == 400
-    assert response.json() == {"detail": "component not found"}
+    assert response.json() == {"detail": "Component not found"}
 
 
 @pytest.mark.asyncio

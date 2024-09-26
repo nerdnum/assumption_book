@@ -1,0 +1,49 @@
+{
+  "projectId": 8,
+  "componentId": 74,
+  "title": "Directives",
+  "sequence": 2,
+  "id": 65,
+  "uuid": "0a018241-50d1-4d2b-a619-2c8b6fe863bc",
+  "content": {
+    "type": "doc",
+    "content": [
+      {
+        "type": "paragraph",
+        "attrs": {
+          "id": "fc56b148-e810-4dfe-b224-5d91aa58f34d"
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "Direct!"
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "attrs": {
+          "id": "2f0df557-0a54-4532-81bd-5f804cbc43c1"
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "Some directives are found here. Now updated."
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "attrs": {
+          "id": "0699ab20-68b5-4a2f-b7be-450bd9ec65c8"
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "And with an extra line!"
+          }
+        ]
+      }
+    ]
+  }
+}

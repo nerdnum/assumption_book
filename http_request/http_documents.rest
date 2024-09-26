@@ -1,4 +1,4 @@
-###
+### Craete a new document
 POST http://localhost:8000/api/v1/documents
 Content-Type: application/json
 
@@ -46,21 +46,46 @@ Content-Type: application/json
 GET http://localhost:8000/api/v1/documents?project_id=8&component_id=74
 
 
-###
+
+### Try to create a document with no section id
 POST http://localhost:8000/api/v1/documents
 Content-Type: application/json
 
 {
-  "projectId": 10,
-  "componentId": 11,
+  "projectId": 8,
+  "componentId": 74,
   "title": "Introduction",
-  "sequence": 1
-}
-
-###
-POST http://localhost:8000/api/v1/documents
-Content-Type: application/json
-
-{
-  "title": "Introduction"
+  "sequence": 1,
+  "content": {
+    "type": "doc",
+    "content": [
+      {
+        "type": "heading",
+        "attrs": {
+          "id": "e8354927-f10a-441a-a4a6-34f4cb185c50",
+          "level": 2,
+          "checksum": "0d1374ebcb161d51f387d6d1a2cb35e4"
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "Heading"
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "attrs": {
+          "id": "e8354927-f10a-441a-a4a6-34f4cb185c50",
+          "checksum": "84e389b41591654ff867dce003a54c8d"
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "This is default text for intialization"
+          }
+        ]
+      }
+    ]
+  }
 }

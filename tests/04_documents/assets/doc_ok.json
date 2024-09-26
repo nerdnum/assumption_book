@@ -1,0 +1,30 @@
+{
+  "type": "doc",
+  "content": [
+    {
+      "type": "heading",
+      "attrs": {
+        "id": "f4a6b2e3-fb7a-4f54-a0be-1159ef5a95a2",
+        "level": 2
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Heading for introduction"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "attrs": {
+        "id": "e8354927-f10a-441a-a4a6-34f4cb185c50"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Some content for the introduction. It is going to be great!"
+        }
+      ]
+    }
+  ]
+}

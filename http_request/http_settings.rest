@@ -1,0 +1,45 @@
+###
+GET http://localhost:8000/api/v1/setting_types
+
+
+###
+POST http://localhost:8000/api/v1/setting_types
+Content-Type: application/json
+
+{
+  "title": "Units of Measure",
+  "description": "Unit of measure for CWP Projects"
+}
+
+
+###
+PUT http://localhost:8000/api/v1/setting_types/1
+Content-Type: application/json
+
+{
+  "title": "Updated title"
+}
+
+
+
+###
+GET http://localhost:8000/api/v1/settings
+
+
+###
+POST http://localhost:8000/api/v1/settings
+Content-Type: application/json
+
+{
+  "settingTypeId": 1,
+  "title": "Energy",
+  "description": "Energy UOM",
+  "value": "kWh"
+}
+
+
+###
+GET http://localhost:8000/api/v1/settings/1
+
+
+

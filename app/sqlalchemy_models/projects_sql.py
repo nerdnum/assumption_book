@@ -1,4 +1,3 @@
-from typing import Union
 from uuid import uuid4
 
 from sqlalchemy import String, select
@@ -49,12 +48,13 @@ class Project(BaseEntity):
 
     @classmethod
     async def get_by_id(cls, db: AsyncSession, id: int) -> "Project":
-        # try:
-        project = await db.get(cls, id)
-        if project is None:
-            raise NoResultFound
-        # except NoResultFound:
-        #     raise ValueError("Project not found")
+        try:
+            project = await db.get(cls, id)
+            if project is None:
+                raise ValueError("Project not found")
+        except Exception as error:
+            raise error
+
         return project
 
     @classmethod

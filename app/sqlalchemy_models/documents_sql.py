@@ -17,7 +17,7 @@ class Document(BaseEntity):
     component_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("components.id"), nullable=False
     )
-    title: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
+    title: Mapped[str] = mapped_column(String(100), unique=False, nullable=False)
     sequence: Mapped[int] = mapped_column(Integer, nullable=True)
     content: Mapped[JSON] = mapped_column(JSON, nullable=True)
 
@@ -48,8 +48,9 @@ class Document(BaseEntity):
             db.add(document)
             await db.commit()
             await db.refresh(document)
-        except IntegrityError:
+        except IntegrityError as error:
             await db.rollback()
+            print("sql:create", error)
             raise ValueError("Document with this title already exists")
         return document
 
@@ -57,7 +58,7 @@ class Document(BaseEntity):
     async def get_by_ids(
         cls, db: AsyncSession, project_id: int, component_id: int
     ) -> list["Document"]:
-        documents = (
+        document = (
             (
                 await db.execute(
                     select(cls).filter(
@@ -68,4 +69,36 @@ class Document(BaseEntity):
             .scalars()
             .all()
         )
-        return documents
+        return document
+
+    @classmethod
+    async def get_by_document_id(
+        cls,
+        db: AsyncSession,
+        document_id: int,
+    ) -> "Document":
+        try:
+            document = await db.get(cls, document_id)
+            if document is None:
+                raise ValueError("Document not found")
+        except ValueError as error:
+            raise error
+        return document
+
+    @classmethod
+    async def update_content_by_id(
+        cls,
+        db: AsyncSession,
+        id: int,
+        content: dict | None,
+    ) -> "Document":
+        try:
+            document = (
+                (await db.execute(select(cls).filter(cls.id == id))).scalars().first()
+            )
+            document.content = content
+            await db.commit()
+            await db.refresh(document)
+        except Exception as error:
+            raise error
+        return document

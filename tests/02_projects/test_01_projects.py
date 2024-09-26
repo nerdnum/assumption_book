@@ -1,14 +1,6 @@
 import pytest
-import pytest_asyncio
-from httpx import AsyncClient
 
 from tests.utils import remove_uuid
-
-
-@pytest_asyncio.fixture
-async def client(app):
-    async with AsyncClient(app=app, base_url="http://localhost:8000/api/v1") as client:
-        yield client
 
 
 @pytest.mark.asyncio

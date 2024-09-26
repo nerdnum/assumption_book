@@ -1,12 +1,14 @@
+import asyncio
+
 import pytest
 import pytest_asyncio
-import asyncio
+from httpx import AsyncClient
 
 from app import init_app
 from app.services.database import sessionmanager
 
 
-@pytest_asyncio.fixture(scope='session')
+@pytest_asyncio.fixture(scope="session")
 async def event_loop():
     try:
         loop = asyncio.get_running_loop()
@@ -17,13 +19,13 @@ async def event_loop():
     # loop.close()
 
 
-@pytest.fixture(scope='session', autouse=True)
+@pytest.fixture(scope="session", autouse=True)
 def test_app(event_loop):
-    app = init_app('test_config.json')
+    app = init_app("test_config.json")
     return app
 
 
-@pytest_asyncio.fixture(scope='session')
+@pytest_asyncio.fixture(scope="session")
 async def setup_db(test_app):
 
     async with sessionmanager.connect() as connection:
@@ -35,7 +37,7 @@ async def setup_db(test_app):
     await sessionmanager.close()
 
 
-@pytest_asyncio.fixture(scope='function')
+@pytest_asyncio.fixture(scope="function")
 async def db(setup_db, test_app):
     async with sessionmanager.session() as session:
         # Created and yield session
@@ -44,6 +46,12 @@ async def db(setup_db, test_app):
         await session.close()
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def app(test_app, setup_db, db):
     yield test_app
+
+
+@pytest_asyncio.fixture
+async def client(app):
+    async with AsyncClient(app=app, base_url="http://localhost:8000/api/v1") as client:
+        yield client
