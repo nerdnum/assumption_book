@@ -114,3 +114,12 @@ async def create_upload_file(files: List[UploadFile]):
         filename_list.append(url_path)
 
     return {"filenames": filename_list}
+
+
+@router.delete("/{document_id}")
+async def delete_document(document_id: int, db: AsyncSession = Depends(get_db)):
+    try:
+        await SqlDocument.delete_by_id(db, document_id)
+    except ValueError as error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error))
+    return {"id": document_id, "status": "deleted"}

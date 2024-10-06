@@ -2,7 +2,7 @@ from uuid import uuid4
 
 from sqlalchemy import ForeignKey, Integer, String, select
 from sqlalchemy.dialects.postgresql import JSON
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -102,3 +102,17 @@ class Document(BaseEntity):
         except Exception as error:
             raise error
         return document
+
+    @classmethod
+    async def delete_by_id(cls, db: AsyncSession, document_id: int) -> None:
+        try:
+            document = await cls.get_by_document_id(db, document_id)
+            if document is None:
+                raise NoResultFound
+            await db.delete(document)
+            await db.commit()
+        except NoResultFound:
+            raise ValueError("Document not found")
+        except Exception:
+            raise
+        return {"detail": "Document deleted"}
