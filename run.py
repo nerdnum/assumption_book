@@ -1,5 +1,4 @@
 from app import init_app
-from fastapi import Request
 
 server = init_app(config_file="config.json")
 

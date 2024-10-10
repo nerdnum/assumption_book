@@ -63,6 +63,7 @@ class SubContent(CamelModel):
 
 class Content(CamelModel):
     type: str
+    context: str
     content: List[SubContent]
 
     # @field_validator("type")
