@@ -19,6 +19,7 @@ class Document(BaseEntity):
     )
     title: Mapped[str] = mapped_column(String(100), unique=False, nullable=False)
     sequence: Mapped[int] = mapped_column(Integer, nullable=True)
+    context: Mapped[str] = mapped_column(String(100), nullable=True)
     content: Mapped[JSON] = mapped_column(JSON, nullable=True)
 
     @classmethod
@@ -34,6 +35,7 @@ class Document(BaseEntity):
         component_id: int,
         title: str,
         sequence: int | None,
+        context: str | None,
         content: dict | None,
     ) -> "Document":
         document = cls(
@@ -42,6 +44,7 @@ class Document(BaseEntity):
             title=title,
             sequence=sequence,
             content=content,
+            context=context,
             uuid=str(uuid4()),
         )
         try:

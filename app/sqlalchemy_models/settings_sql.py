@@ -8,6 +8,7 @@ from sqlalchemy import (
     UniqueConstraint,
     select,
 )
+from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column
@@ -21,7 +22,7 @@ class Setting(BaseEntity):
 
     title: Mapped[str] = mapped_column(String, nullable=False)
     description: Mapped[str] = mapped_column(String)
-    value: Mapped[str] = mapped_column(String, nullable=False)
+    value: Mapped[JSON] = mapped_column(JSON, nullable=True)
     setting_type_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("setting_types.id"), nullable=False
     )

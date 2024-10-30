@@ -1,9 +1,9 @@
 ###
-GET http://localhost:8000/api/v1/setting_types
+GET http://localhost:8000/api/v1/setting-types
 
 
 ###
-POST http://localhost:8000/api/v1/setting_types
+POST http://localhost:8000/api/v1/setting-types
 Content-Type: application/json
 
 {
@@ -13,11 +13,12 @@ Content-Type: application/json
 
 
 ###
-PUT http://localhost:8000/api/v1/setting_types/1
+PUT http://localhost:8000/api/v1/setting-types/1
 Content-Type: application/json
 
 {
-  "title": "Updated title"
+  "title": "application",
+  "description": "General application related settings"
 }
 
 
@@ -32,9 +33,9 @@ Content-Type: application/json
 
 {
   "settingTypeId": 1,
-  "title": "Energy",
-  "description": "Energy UOM",
-  "value": "kWh"
+  "title": "units-of-measure",
+  "description": "Units of Measure for CWP Projects",
+  "value": {"metric": "Energy", "unit": "kWh"}
 }
 
 

@@ -1,0 +1,218 @@
+[
+  {
+    "id": 1,
+    "text": "quetta",
+    "symbol": "Q",
+    "factor": "10^30",
+    "name": "nonillion",
+    "category": "extra-largest",
+    "available": false
+  },
+  {
+    "id": 2,
+    "text": "ronna",
+    "symbol": "R",
+    "factor": "10^27",
+    "name": "octillion",
+    "category": "extra-largest",
+    "available": false
+  },
+  {
+    "id": 3,
+    "text": "yotta",
+    "symbol": "Y",
+    "factor": "10^24",
+    "name": "septillion",
+    "category": "extra-largest",
+    "available": false
+  },
+  {
+    "id": 4,
+    "text": "zetta",
+    "symbol": "Z",
+    "factor": "10^21",
+    "name": "sextillion",
+    "category": "extra-largest",
+    "available": false
+  },
+  {
+    "id": 5,
+    "text": "exa",
+    "symbol": "E",
+    "factor": "10^18",
+    "name": "quintillion",
+    "category": "extra-largest",
+    "available": false
+  },
+  {
+    "id": 6,
+    "text": "peta",
+    "symbol": "P",
+    "factor": "10^15",
+    "name": "quadrillion",
+    "category": "largest",
+    "available": true
+  },
+  {
+    "id": 7,
+    "text": "tera",
+    "symbol": "T",
+    "factor": "10^12",
+    "name": "trillion",
+    "category": "largest",
+    "available": true
+  },
+  {
+    "id": 8,
+    "text": "giga",
+    "symbol": "G",
+    "factor": "10^9",
+    "name": "billion",
+    "category": "larger",
+    "available": true
+  },
+  {
+    "id": 9,
+    "text": "mega",
+    "symbol": "M",
+    "factor": "10^6",
+    "name": "million",
+    "category": "larger",
+    "available": true
+  },
+  {
+    "id": 10,
+    "text": "kilo",
+    "symbol": "k",
+    "factor": "10^3",
+    "name": "thousand",
+    "category": "larger",
+    "available": true
+  },
+  {
+    "id": 11,
+    "text": "hecto",
+    "symbol": "h",
+    "factor": "10^2",
+    "name": "hundred",
+    "category": "large",
+    "available": true
+  },
+  {
+    "id": 12,
+    "text": "deka",
+    "symbol": "da",
+    "factor": "10^1",
+    "name": "ten",
+    "category": "large",
+    "available": true
+  },
+  {
+    "id": 13,
+    "text": "deci",
+    "symbol": "d",
+    "factor": "10^-1",
+    "name": "tenth",
+    "category": "small",
+    "available": true
+  },
+  {
+    "id": 14,
+    "text": "centi",
+    "symbol": "c",
+    "factor": "10^-2",
+    "name": "hundredth",
+    "category": "small",
+    "available": true
+  },
+  {
+    "id": 15,
+    "text": "milli",
+    "symbol": "m",
+    "factor": "10^-3",
+    "name": "thousandth",
+    "category": "smaller",
+    "available": true
+  },
+  {
+    "id": 16,
+    "text": "micro",
+    "symbol": "\u00b5",
+    "factor": "10^-6",
+    "name": "millionth",
+    "category": "smaller",
+    "available": true
+  },
+  {
+    "id": 17,
+    "text": "nano",
+    "symbol": "n",
+    "factor": "10^-9",
+    "name": "billionth",
+    "category": "smaller",
+    "available": true
+  },
+  {
+    "id": 18,
+    "text": "pico",
+    "symbol": "p",
+    "factor": "10^-12",
+    "name": "trillionth",
+    "category": "smallest",
+    "available": true
+  },
+  {
+    "id": 19,
+    "text": "femto",
+    "symbol": "f",
+    "factor": "10^-15",
+    "name": "quadrillionth",
+    "category": "smallest",
+    "available": true
+  },
+  {
+    "id": 20,
+    "text": "atto",
+    "symbol": "a",
+    "factor": "10^-18",
+    "name": "quintillionth",
+    "category": "extra-smallest",
+    "available": false
+  },
+  {
+    "id": 21,
+    "text": "zepto",
+    "symbol": "z",
+    "factor": "10^-21",
+    "name": "sextillionth",
+    "category": "extra-smallest",
+    "available": false
+  },
+  {
+    "id": 22,
+    "text": "yocto",
+    "symbol": "y",
+    "factor": "10^-24",
+    "name": "septillionth",
+    "category": "extra-smallest",
+    "available": false
+  },
+  {
+    "id": 23,
+    "text": "ronto",
+    "symbol": "r",
+    "factor": "10^-27",
+    "name": "octillionth",
+    "category": "extra-smallest",
+    "available": false
+  },
+  {
+    "id": 24,
+    "text": "quecto ",
+    "symbol": "q",
+    "factor": "10^-30",
+    "name": "nonillionth",
+    "category": "extra-smallest",
+    "available": false
+  }
+]

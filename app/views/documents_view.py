@@ -26,7 +26,7 @@ pp = pprint.PrettyPrinter(indent=4)
 router = APIRouter(prefix="/documents", tags=["documents"])
 
 
-@router.get("", response_model=list[Document])
+@router.get("", response_model=list[Document], response_model_exclude_unset=True)
 async def get_documents(
     project_id: int, component_id: int, db: AsyncSession = Depends(get_db)
 ):
@@ -50,7 +50,9 @@ async def get_documents(
     return documents
 
 
-@router.get("/{document_id:int}", response_model=Document)
+@router.get(
+    "/{document_id:int}", response_model=Document, response_model_exclude_unset=True
+)
 async def get_document_by_id(
     document_id: int, db: AsyncSession = Depends(get_db)
 ) -> Document:
@@ -77,7 +79,9 @@ async def create_document(
     try:
         with ensure_request_validation_errors("body"):
             await document.model_async_validate()
-        document = await SqlDocument.create(db, **document.model_dump())
+        document = await SqlDocument.create(
+            db, **document.model_dump(exclude_unset=True)
+        )
     except ValueError as error:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error))
     return document
@@ -89,7 +93,7 @@ async def update_document(
 ):
     try:
         document = await SqlDocument.update_content_by_id(
-            db, document_id, document.model_dump()["content"]
+            db, document_id, document.model_dump(exclude_unset=True)["content"]
         )
     except ValueError as error:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error))

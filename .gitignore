@@ -39,3 +39,4 @@ test_config.json
 .coverage
 
 zz_backup
+app/static

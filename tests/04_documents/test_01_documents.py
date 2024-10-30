@@ -1,4 +1,5 @@
 import json
+import os
 
 import pytest
 import pytest_asyncio
@@ -79,7 +80,7 @@ async def get_document(client, get_project, get_component):
     if len(response_json) > 0:
         a_document = response_json[0]  # type: ignore
     else:
-        with open("tests/04_test_documents/assets/valid_content.json") as json_file:
+        with open("tests/04_documents/assets/valid_content.json") as json_file:
             doc_json = json.load(json_file)
             response = await client.post(
                 "/documents",
@@ -89,6 +90,7 @@ async def get_document(client, get_project, get_component):
                     "title": "Fixture Document 1",
                     "sequence": 1,
                     "content": doc_json,
+                    "context": "Fixture Document 1 context",
                 },
             )
             a_document = response.json()
@@ -124,7 +126,7 @@ async def test_create_document_for_project_component(
     project_id = get_project["project_a"]["id"]  # type: ignore
     component_id = get_component["id"]  # type: ignore
 
-    with open("tests/04_test_documents/assets/valid_content.json") as json_file:
+    with open("tests/04_documents/assets/valid_content.json") as json_file:
         doc_json = json.load(json_file)
         response = await client.post(
             "/documents",
@@ -134,6 +136,7 @@ async def test_create_document_for_project_component(
                 "title": "Fixture Document 1",
                 "sequence": 1,
                 "content": doc_json,
+                "context": "Fixture Document 1 context",
             },
         )
         assert response.status_code == 201
@@ -144,6 +147,7 @@ async def test_create_document_for_project_component(
             "title": "Fixture Document 1",
             "sequence": 1,
             "content": doc_json,
+            "context": "Fixture Document 1 context",
             "id": 1,
         }
 
@@ -155,7 +159,7 @@ async def test_create_document_with_duplicate_title_for_project_component(
     project_id = get_project["project_a"]["id"]  # type: ignore
     component_id = get_component["id"]  # type: ignore
 
-    with open("tests/04_test_documents/assets/valid_content.json") as json_file:
+    with open("tests/04_documents/assets/valid_content.json") as json_file:
         doc_json = json.load(json_file)
         response = await client.post(
             "/documents",
@@ -165,6 +169,7 @@ async def test_create_document_with_duplicate_title_for_project_component(
                 "title": "Fixture Document 1",
                 "sequence": 1,
                 "content": doc_json,
+                "context": "Fixture Document 1 context",
             },
         )
         assert response.status_code == 422
@@ -189,7 +194,7 @@ async def test_retrieve_document_for_project_component(
     project_id = get_project["project_a"]["id"]  # type: ignore
     component_id = get_component["id"]  # type: ignore
 
-    with open("tests/04_test_documents/assets/valid_content.json") as json_file:
+    with open("tests/04_documents/assets/valid_content.json") as json_file:
         doc_json = json.load(json_file)
         response = await client.get(
             f"/documents?project_id={project_id}&component_id={component_id}",
@@ -203,45 +208,53 @@ async def test_retrieve_document_for_project_component(
             "sequence": 1,
             "content": doc_json,
             "id": 1,
+            "context": "Fixture Document 1 context",
         }
 
 
-@pytest.mark.asyncio
-async def test_create_document_without_section_id(client, get_project, get_component):
-    project_id = get_project["project_a"]["id"]  # type: ignore
-    component_id = get_component["id"]  # type: ignore
+# @pytest.mark.asyncio
 
-    with open("tests/04_test_documents/assets/doc_no_id.json") as json_file:
-        doc_json = json.load(json_file)
-        response = await client.post(
-            "/documents",
-            json={
-                "projectId": project_id,
-                "componentId": component_id,
-                "title": "Fixture Document 1",
-                "sequence": 1,
-                "content": doc_json,
-            },
-        )
-        assert response.status_code == 422
-        assert response.json() == {
-            "detail": [
-                {
-                    "input": {
-                        "level": 2,
-                    },
-                    "loc": ["body", "content", "content", 0, "attrs", "id"],
-                    "msg": "Field required",
-                    "type": "missing",
-                }
-            ]
-        }
+## After creating more documents, it became clear that not all document parts will have ids. So this test
+## will aloways fail. For now I just need to get things done, so this test will be skipped for now.
+## 2024-10-24
+
+# async def test_create_document_without_section_id(client, get_project, get_component):
+#     project_id = get_project["project_a"]["id"]  # type: ignore
+#     component_id = get_component["id"]  # type: ignore
+
+#     with open("tests/04_documents/assets/doc_no_id.json") as json_file:
+#         doc_json = json.load(json_file)
+#         response = await client.post(
+#             "/documents",
+#             json={
+#                 "projectId": project_id,
+#                 "componentId": component_id,
+#                 "title": "Fixture Document 1 more",
+#                 "sequence": 1,
+#                 "content": doc_json,
+#                 "context": "Fixture Document 1 context",
+#             },
+#         )
+#         print_response(response)
+#         assert response.status_code == 422
+#         assert response.json() == {
+#             "detail": [
+#                 {
+#                     "input": {
+#                         "level": 2,
+#                     },
+#                     "loc": ["body", "content", "content", 0, "attrs", "id"],
+#                     "msg": "Field required",
+#                     "type": "missing",
+#                 }
+#             ]
+#         }
 
 
 @pytest.mark.asyncio
 async def test_create_document_with_none_existant_project_id(client, get_component):
     component_id = get_component["id"]  # type: ignore
-    with open("tests/04_test_documents/assets/valid_content.json") as json_file:
+    with open("tests/04_documents/assets/valid_content.json") as json_file:
         doc_json = json.load(json_file)
         response = await client.post(
             "/documents",
@@ -251,6 +264,7 @@ async def test_create_document_with_none_existant_project_id(client, get_compone
                 "title": "Title for non-existant project",
                 "sequence": 1,
                 "content": doc_json,
+                "context": "Fixture Document 1 context",
             },
         )
         assert response.status_code == 422
@@ -269,7 +283,7 @@ async def test_create_document_with_none_existant_project_id(client, get_compone
 @pytest.mark.asyncio
 async def test_create_document_with_none_existant_component_id(client, get_project):
     project_id = get_project["project_a"]["id"]  # type: ignore
-    with open("tests/04_test_documents/assets/valid_content.json") as json_file:
+    with open("tests/04_documents/assets/valid_content.json") as json_file:
         doc_json = json.load(json_file)
         response = await client.post(
             "/documents",
@@ -279,6 +293,7 @@ async def test_create_document_with_none_existant_component_id(client, get_proje
                 "title": "Title for non-existant project",
                 "sequence": 1,
                 "content": doc_json,
+                "context": "Fixture Document 1 context",
             },
         )
         assert response.status_code == 422
@@ -300,9 +315,7 @@ async def test_update_documents_with_new_content(client, get_document):
     submit_json = get_document
     document_id = get_document["id"]  # type: ignore
 
-    with open(
-        "tests/04_test_documents/assets/valid_content_for_update.json"
-    ) as json_file:
+    with open("tests/04_documents/assets/valid_content_for_update.json") as json_file:
         doc_json = json.load(json_file)
         submit_json["content"] = doc_json  # type: ignore
 

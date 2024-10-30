@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Any, List, Optional
 
 from fastapi_camelcase import CamelModel
 
@@ -6,14 +6,14 @@ from fastapi_camelcase import CamelModel
 class SettingBase(CamelModel):
     title: str
     description: str | None = None
-    value: str
+    value: Optional[Any]
     setting_type_id: int
 
 
 class SettingUpdate(SettingBase):
     title: Optional[str] = None
     description: Optional[str] = None
-    value: Optional[str] = None
+    value: Optional[Any] = None
     setting_type_id: Optional[int] = None
 
 

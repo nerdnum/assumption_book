@@ -16,7 +16,7 @@ from app.sqlalchemy_models.projects_sql import Project as SqlProject
 
 class AttrsContent(CamelModel):
     __pydantic_extra__: Dict[Any, Any]
-    id: str
+    id: Optional[str] = None
 
     @field_validator("id")
     @classmethod
@@ -31,9 +31,11 @@ class AttrsContent(CamelModel):
 
 
 class SubContent(CamelModel):
-    type: str
-    attrs: AttrsContent
+    type: Optional[str] = None
+    attrs: Optional[AttrsContent] = None
     content: Optional[List[Any]] = None
+
+    model_config = ConfigDict(extra="allow")
 
     # @model_validator(mode="before")
     # @classmethod
@@ -63,7 +65,6 @@ class SubContent(CamelModel):
 
 class Content(CamelModel):
     type: str
-    context: str
     content: List[SubContent]
 
     # @field_validator("type")
@@ -78,6 +79,7 @@ class DocumentBase(AsyncValidationModelMixin, CamelModel):
     component_id: int
     title: str
     sequence: int
+    context: Optional[str] = None
 
     async def check_for_duplicate_title_in_base(self, value: str):
         async with sessionmanager.session() as session:
