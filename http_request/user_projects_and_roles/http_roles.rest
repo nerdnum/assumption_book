@@ -1,0 +1,45 @@
+
+
+######## Test roles
+
+###
+POST http://localhost:8000/api/v1/roles
+content-type: application/json
+
+{
+  "name": "Document creator",
+  "description": "Document creator"
+}
+
+
+### Get all roles
+GET http://localhost:8000/api/v1/roles
+
+
+### Create a new role
+PUT http://localhost:8000/api/v1/roles/18
+Content-Type: application/json
+
+{
+  "description": "Creative document writer"
+}
+
+
+### Delete a role
+DELETE http://localhost:8000/api/v1/roles/14
+
+
+
+### Get specific role
+GET http://localhost:8000/api/v1/roles/18
+
+
+
+
+### Get none exisitant role 
+GET http://localhost:8000/api/v1/roles/99
+
+
+
+### Get role by uuid
+GET http://localhost:8000/api/v1/roles/uuid/9984d5d6-9d1b-46c6-adc8-042bd80950eb

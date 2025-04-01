@@ -7,7 +7,8 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.services.database import BaseEntity
 from app.services.utils import translate_exception
-from app.sqlalchemy_models.projects_sql import Project as SqlProject
+from app.sqlalchemy_models.documents_sql import Document
+from app.sqlalchemy_models.user_project_role_sql import Project as SqlProject
 
 
 class Component(AsyncAttrs, BaseEntity):
@@ -67,7 +68,7 @@ class Component(AsyncAttrs, BaseEntity):
         description: str = None,
     ) -> "Component":
 
-        project = await SqlProject.get_by_id(db, project_id)
+        project = await SqlProject.get_project_by_id(db, project_id)
 
         if sequence is None:
             max_sequence = (
@@ -87,7 +88,7 @@ class Component(AsyncAttrs, BaseEntity):
             parent_id=parent_id,
             title=title,
             level=level,
-            sequence=max_sequence + 1,
+            sequence=max_sequence,
             description=description,
             uuid=str(uuid4()),
         )
@@ -189,6 +190,8 @@ class Component(AsyncAttrs, BaseEntity):
 
     @classmethod
     async def delete(cls, db, component_id: int) -> "Component":
+        # TODO: check if component has has siblings that follow it (i.e. sibling with higher sequence)
+        # if so, reduce the sequence of the siblings by one
         component = await cls.get_by_id(db, component_id)
 
         try:
@@ -217,6 +220,30 @@ class Component(AsyncAttrs, BaseEntity):
         except NoResultFound:
             raise ValueError("component not found")
         return descendants
+
+    @classmethod
+    async def get_html_by_id(cls, db, component_id: int) -> str:
+        # Component id is unique in the datatable so project_id is irrelevant
+        try:
+            component = await db.get(cls, component_id)
+            if component is None:
+                raise ValueError("Component not found")
+
+            documents = await Document.get_by_project_and_component_ids(
+                db, component.project_id, component.id
+            )
+            component_html = f"<h1>{component.title}</h1>"
+            for document in documents:
+                component_html += await Document.get_html_by_document_id(
+                    db, document.id
+                )
+
+        except Exception as error:
+            if type(error) is ValueError:
+                raise error
+            exception = translate_exception(__name__, "get", error)
+            raise exception
+        return component_html
 
     # @classmethod
     # async def get_hierarchy(cls, db, project_id: int, component_id: int = None, level: int = 0) -> any:

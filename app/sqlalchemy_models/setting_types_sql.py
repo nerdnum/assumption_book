@@ -32,12 +32,15 @@ class SettingType(BaseEntity):
         title: str,
         description: str | None,
         default_text: str | None,
+        user_id: int,
     ) -> "SettingType":
         setting_type = cls(
             title=title,
             description=description,
             default_text=default_text,
             uuid=str(uuid4()),
+            created_by=user_id,
+            updated_by=user_id,
         )
         try:
             db.add(setting_type)
@@ -45,6 +48,7 @@ class SettingType(BaseEntity):
             await db.refresh(setting_type)
         except IntegrityError as error:
             print("Found Integrity Error")
+            print(error)
             await db.rollback()
             error_str = str(error)
             if (

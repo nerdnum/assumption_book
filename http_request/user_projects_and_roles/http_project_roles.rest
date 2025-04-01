@@ -1,0 +1,23 @@
+### Get all projects
+GET http://localhost:8000/api/v1/projects
+
+### Get all roles
+GET http://localhost:8000/api/v1/roles
+
+
+### Get project with roles
+GET http://localhost:8000/api/v1/projects/11/roles
+
+
+### Create project member role
+POST http://localhost:8000/api/v1/roles
+Content-Type: application/json
+
+{
+    "description": "Is a project member",
+    "name": "Member",
+    "is_system_role": true
+}
+
+### Add role to project
+POST http://localhost:8000/api/v1/projects/11/roles/23

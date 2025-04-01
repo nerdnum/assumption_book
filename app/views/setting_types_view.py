@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -8,6 +10,8 @@ from app.pydantic_models.setting_type_model import (
 )
 from app.services.database import get_db
 from app.sqlalchemy_models.setting_types_sql import SettingType as SqlSettingType
+from app.sqlalchemy_models.user_project_role_sql import User as SqlUser
+from app.views.auth_view import get_current_user_with_roles
 
 router = APIRouter(prefix="/setting-types", tags=["setting-types"])
 
@@ -20,10 +24,14 @@ async def get_setting_types(db: AsyncSession = Depends(get_db)):
 
 @router.post("", response_model=SettingType, status_code=status.HTTP_201_CREATED)
 async def create_setting_type(
-    setting_type: SettingTypeCreate, db: AsyncSession = Depends(get_db)
+    setting_type: SettingTypeCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
 ):
     try:
-        setting_type = await SqlSettingType.create(db, **setting_type.model_dump())
+        setting_type = await SqlSettingType.create(
+            db, **setting_type.model_dump(), user_id=current_user.id
+        )
     except HTTPException:
         raise
     except ValueError as error:

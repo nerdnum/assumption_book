@@ -2,12 +2,20 @@ from typing import Optional
 
 from fastapi_camelcase import CamelModel
 
+from app.pydantic_models.role_model import Role
+
 
 class ProjectBase(CamelModel):
     title: str
     description: str | None = None
     project_manager: str | None = None
     logo_url: str | None = None
+
+
+class ProjectBasicInfo(CamelModel):
+    id: int
+    title: str
+    description: str | None = None
 
 
 class ProjectUpdate(CamelModel):
@@ -30,3 +38,30 @@ class Project(ProjectBase):
 
     class Config:
         from_attributes = True
+
+
+class ProjectWithRoles(Project):
+    roles: list["Role"] = []
+
+
+class RoleWithProjects(Role):
+    projects: list["Project"] = []
+
+
+class CompSpec(CamelModel):
+    id: int
+
+
+class DocSpec(CamelModel):
+    type: str
+    project_id: int
+    components: list[CompSpec]
+
+    class Config:
+        from_attributes = True
+
+
+class DocResponse(CamelModel):
+    status: str
+    name: str
+    url: str

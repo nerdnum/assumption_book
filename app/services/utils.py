@@ -3,7 +3,7 @@ import pprint
 from sqlalchemy.exc import IntegrityError
 
 from app.services.database import sessionmanager
-from app.sqlalchemy_models.projects_sql import Project
+from app.sqlalchemy_models.user_project_role_sql import Project
 
 
 def error_print(filename, method, error_string):

@@ -1,43 +1,81 @@
+from datetime import UTC, datetime, timedelta
 from typing import Annotated
-from uuid import uuid4
-
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.exc import NoResultFound
-from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from passlib.context import CryptContext
-from datetime import datetime, timedelta, UTC
-
-from app.sqlalchemy_models.users_sql import User as SqlUser
 
 import jwt
-from jwt.exceptions import InvalidTokenError
+from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security.utils import get_authorization_scheme_param
+from fastapi_camelcase import CamelModel
+from passlib.context import CryptContext
 from pydantic import BaseModel
-from app.pydantic_models.user_model import User, UserInDB
-from app.services.database import sessionmanager, get_db
-from app.config import get_config
+from sqlalchemy.exc import NoResultFound
+from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi.security.base import SecurityBase
 
+from app.config import get_config
+from app.pydantic_models.user_model import User, FullUser
+from app.services.database import get_db, sessionmanager
+from app.sqlalchemy_models.user_project_role_sql import User as SqlUser
 
 config = get_config()
 
-secret_key = config['secret_key']
-algorithm = config['algorithm']
-access_token_expire_minutes = config['access_token_expire_minutes']
+secret_key = config["secret_key"]
+algorithm = config["algorithm"]
+access_token_expire_minutes = config["access_token_expire_minutes"] or 30
+refresh_token_expire_minutes = config["refresh_token_expire_minutes"] or 2880
+api_prefix = "/api/" + config["api_version"]
+tokenUrl = api_prefix + "/auth/token"
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-class Token(BaseModel):
+class Token(CamelModel):
+    user_data: User
+    exp: datetime
+    refresh: bool
+
+
+class TokenResponse(CamelModel):
     access_token: str
     token_type: str
+    refresh_token: str | None = None
 
 
-class TokenData(BaseModel):
-    username: str | None = None
+class Password(CamelModel):
+    password: str
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/token")
+
+
+def make_token_user(user: SqlUser):
+    user_model = User.model_validate(user)
+    return user_model.model_dump(by_alias=True)
+
+
+class Oath2SchemeUser(OAuth2PasswordBearer):
+    def __init__(self, tokenUrl: str):
+        super().__init__(tokenUrl=tokenUrl)
+
+    async def __call__(self, request: Request):
+        try:
+            params = await super().__call__(request)
+        except Exception as error:
+            if error.status_code == 401 and error.detail == "Not authenticated":
+                if not config["enforce_authentication"]:
+                    async with sessionmanager.session() as db:
+                        user = await SqlUser.get(db, config["default_user_id"])
+                        user_data = make_token_user(user)
+                        params = await create_token(
+                            user_data=user_data,
+                            token_expire_minutes=access_token_expire_minutes,
+                        )
+                    return params
+            raise error
+        return params
+
+
+oauth2_scheme = Oath2SchemeUser(tokenUrl=tokenUrl)
 
 
 def get_password_hash(password):
@@ -45,8 +83,28 @@ def get_password_hash(password):
 
 
 def verify_pasword(submitted_password, hashed_password):
-    get_password_hash(submitted_password)
     return pwd_context.verify(submitted_password, hashed_password)
+
+
+async def create_token(
+    user_data: dict,
+    token_expire_minutes: int,
+    refresh_token: bool = False,
+):
+    to_encode = {"user_data": user_data}
+    now = datetime.now(UTC)
+    if token_expire_minutes:
+        expire = now + timedelta(minutes=token_expire_minutes)
+    else:
+        expire = now + timedelta(minutes=token_expire_minutes)
+    to_encode.update({"exp": expire})
+    to_encode.update({"refresh": refresh_token})
+
+    token = Token(**to_encode)
+    to_encode_camel = token.model_dump(by_alias=True)
+
+    encoded_jwt = jwt.encode(to_encode_camel, secret_key, algorithm=algorithm)
+    return encoded_jwt
 
 
 async def get_user_by_username(username: str):
@@ -58,17 +116,17 @@ async def get_user_by_username(username: str):
         return user
 
 
-async def get_user(username: str):
-    try:
-        user = await get_user_by_username(username)
+async def get_user_by_email(email: str):
+    async with sessionmanager.session() as session:
+        try:
+            user = await SqlUser.get_user_by_email(session, email)
+        except NoResultFound:
+            raise ValueError("User not found")
         return user
-    except NoResultFound:
-        raise ValueError("User not found")
-    return
 
 
-async def authenticate_user(username: str, password: str):
-    user = await get_user(username)
+async def authenticate_user_by_username(username: str, password: str):
+    user = await get_user_by_username(username)
     if not user:
         raise ValueError("Incorrect username or password")
     if not verify_pasword(password, user.password):
@@ -76,16 +134,13 @@ async def authenticate_user(username: str, password: str):
     return user
 
 
-async def create_access_token(data: dict, expires_delta: timedelta | None = None):
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.now(UTC) + expires_delta
-    else:
-        expire = datetime.now(UTC) + timedelta(minutes=15)
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, secret_key,
-                             algorithm=algorithm)
-    return encoded_jwt
+async def authenticate_user_by_email(user_email: str, password: str):
+    user = await get_user_by_email(user_email)
+    if not user:
+        raise ValueError("Incorrect email or password")
+    if not verify_pasword(password, user.password):
+        raise ValueError("Incorrect email or password")
+    return user
 
 
 async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
@@ -95,35 +150,119 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, secret_key, algorithms=[
-                             algorithm])
-        username = payload.get("sub")
-        if username is None:
+        payload = jwt.decode(token, secret_key, algorithms=[algorithm])
+        received_token = Token(**payload)
+        user_data = received_token.user_data
+        ## check if token has user data
+        user_email = user_data.email
+        if user_email is None:
             raise credentials_exception
-        token_data = TokenData(username=username)
-    except InvalidTokenError:
-        raise credentials_exception
-    user = await get_user_by_username(token_data.username)
-    if user is None:
-        raise credentials_exception
+        token_user = await get_user_by_email(user_email)
+        if token_user is None:
+            raise credentials_exception
+
+        ## check if token is expired
+        # expiry_datetime = datetime.fromtimestamp(payload.get("exp"), UTC)
+        # if datetime.now(UTC) >= expiry_datetime:
+        #     raise InvalidTokenError
+
+    except Exception as error:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=str(error),
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    return token_user
+
+
+async def get_current_user_with_roles(
+    user: Annotated[SqlUser, Depends(get_current_user)],
+    request: Request,
+):
+    # print(request.url.path)
+    # print("get_current_user_with_roles")
     return user
 
 
-async def get_current_active_user(current_user: Annotated[SqlUser, Depends(get_current_user)]):
-    if current_user.disabled:
-        raise HTTPException(status_code=401, detail="Inactive user")
+async def get_current_active_user(
+    current_user: Annotated[SqlUser, Depends(get_current_user)],
+):
+    if not current_user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Inactive user"
+        )
     return current_user
 
 
-@router.post("/token")
-async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
+async def verify_token(request: Request):
+    authorization = request.headers.get("Authorization")
+    scheme, credentials = get_authorization_scheme_param(authorization)
+    if not (authorization and scheme and credentials):
+
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Not authenticated"
+        )
+    if scheme.lower() != "bearer":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Invalid authentication credentials",
+        )
     try:
-        user = await authenticate_user(form_data.username, form_data.password)
-        if user.disabled:
+        payload = jwt.decode(credentials, secret_key, algorithms=[algorithm])
+        received_token = Token(**payload)
+        user_data = received_token.user_data
+        email = user_data.email
+        if email is None:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Invalid authentication credentials",
+            )
+        expiry = datetime.fromtimestamp(payload.get("exp"), UTC)
+        if datetime.now(UTC) >= expiry:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Session expired",
+            )
+        user_data_for_token = user_data.model_dump(by_alias=True)
+        new_access_token = await create_token(
+            user_data=user_data_for_token,
+            token_expire_minutes=access_token_expire_minutes,
+            refresh_token=False,
+        )
+    except Exception as error:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(error),
+        )
+    return new_access_token
+
+
+## TODO: use pyargon2-cffi to generate password hash and verify password
+
+
+@router.post("/refresh")
+async def get_fresh_access_token(token: Annotated[str, Depends(verify_token)] = None):
+    return {"access_token": token, "accessToken": token}
+
+
+@router.post("/token")
+async def login(
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+) -> TokenResponse:
+    try:
+        user = await authenticate_user_by_email(form_data.username, form_data.password)
+        if not user.is_active:
             raise HTTPException(status_code=401, detail="Inactive user")
-        access_token_expires = timedelta(minutes=access_token_expire_minutes)
-        access_token = await create_access_token(
-            data={"sub": user.username}, expires_delta=access_token_expires
+        user_data = make_token_user(user)
+        access_token = await create_token(
+            user_data=user_data,
+            token_expire_minutes=access_token_expire_minutes,
+        )
+        refresh_token = await create_token(
+            user_data=user_data,
+            token_expire_minutes=refresh_token_expire_minutes,
+            refresh_token=True,
         )
     except ValueError:
         raise HTTPException(
@@ -131,25 +270,63 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> T
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    return Token(access_token=access_token, token_type="bearer")
+    return TokenResponse(
+        access_token=access_token, token_type="Bearer", refresh_token=refresh_token
+    )
 
 
-@ router.get("/me", response_model=User)
-async def get_user_me(current_user: Annotated[SqlUser, Depends(get_current_active_user)]):
+@router.get("/me", response_model=FullUser)
+async def get_user_me(
+    current_user: Annotated[SqlUser, Depends(get_current_active_user)],
+):
     return current_user
 
 
-class Password(BaseModel):
-    password: str
-
-
-@router.post("/users/{id}/set_auth", response_model=User)
-async def set_password(id: int, password: Password, db: AsyncSession = Depends(get_db)):
+@router.post("/set_auth", response_model=dict)
+async def set_password(
+    password: Password,
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[SqlUser, Depends(get_current_user)] = None,
+):
     # if config['config_name'] != 'testing':
     #     raise HTTPException(status_code=404, detail="Not found")
     try:
         hashed_password = get_password_hash(password.password)
-        user = await SqlUser.set_password(db, id, hashed_password)
+        user = await SqlUser.set_password(
+            db, current_user.id, hashed_password, current_user.id
+        )
     except NoResultFound:
         raise HTTPException(status_code=400, detail="User not found")
-    return user
+    return {"detail": "success"}
+
+
+@router.get("/items")
+async def read_items(token: Annotated[str, Depends(oauth2_scheme)]):
+    return {"token": token}
+
+
+@router.post("/verify")
+async def verify_email_token(token: Annotated[str, Depends(oauth2_scheme)]):
+    if token:
+        return {"token": "verified"}
+
+
+@router.get(
+    "/password-token/{id:int}",
+    response_model=TokenResponse,
+    response_model_exclude_unset=True,
+)
+async def get_password_token(
+    id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        user = await SqlUser.get(db, id)
+        user_data = make_token_user(user)
+        password_token = await create_token(
+            user_data=user_data,
+            token_expire_minutes=access_token_expire_minutes,
+        )
+    except Exception as error:
+        raise HTTPException(status_code=400, detail=str(error))
+    return {"access_token": password_token, "token_type": "Bearer"}

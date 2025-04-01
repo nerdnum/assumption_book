@@ -28,6 +28,11 @@ class SubBaseEntity(Base):
         server_default=utcnow(),
         onupdate=utcnow(),
     )
+    created_by: Mapped[Optional[int]] = mapped_column(Integer, nullable=False)
+    updated_by: Mapped[Optional[int]] = mapped_column(
+        Integer,
+        nullable=False,
+    )
 
 
 class BaseEntity(SubBaseEntity):

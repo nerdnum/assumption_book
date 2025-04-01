@@ -33,10 +33,13 @@ alembichelp.py
 # Miscellaneous
 *.pyc
 .DS_Store
-config.json
+config*.json
 test_config.json
 
 .coverage
 
 zz_backup
-app/static
+app/static/document_images
+app/static/docx
+utils
+test.json

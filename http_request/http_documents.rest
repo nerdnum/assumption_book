@@ -43,7 +43,7 @@ Content-Type: application/json
 }
 
 ###
-GET http://localhost:8000/api/v1/documents?project_id=8&component_id=74
+GET http://localhost:8000/api/v1/documents/count?project_id=11&component_id=117
 
 
 
@@ -52,40 +52,81 @@ POST http://localhost:8000/api/v1/documents
 Content-Type: application/json
 
 {
-  "projectId": 8,
-  "componentId": 74,
-  "title": "Introduction",
+  "projectId": 11,
+  "componentId": 76,
+  "title": "Some more info",
   "sequence": 1,
-  "content": {
-    "type": "doc",
-    "content": [
-      {
-        "type": "heading",
-        "attrs": {
-          "id": "e8354927-f10a-441a-a4a6-34f4cb185c50",
-          "level": 2,
-          "checksum": "0d1374ebcb161d51f387d6d1a2cb35e4"
-        },
-        "content": [
-          {
-            "type": "text",
-            "text": "Heading"
-          }
-        ]
-      },
-      {
-        "type": "paragraph",
-        "attrs": {
-          "id": "e8354927-f10a-441a-a4a6-34f4cb185c50",
-          "checksum": "84e389b41591654ff867dce003a54c8d"
-        },
-        "content": [
-          {
-            "type": "text",
-            "text": "This is default text for intialization"
-          }
-        ]
-      }
-    ]
-  }
+  "context": "information",
+  "htmlContent": null,
+  "jsonContent": [
+                {
+                    "id": 0,
+                    "html": "<p data-id=\"3a5c30fc-971c-4edf-960b-be986e9298e2\">Line 1</p>"
+                },
+                {
+                    "id": 1,
+                    "html": "<p data-id=\"4361c8ec-d00e-4730-94da-36fe5083a766\">Line 2</p>"
+                }
+            ]
 }
+
+
+###
+POST http://localhost:8000/api/v1/doc_export/export
+Content-Type: application/json
+
+{
+ "html": "<p>Some text</p>"
+}
+
+###
+GET http://localhost:8000/api/v1/documents/181
+
+
+###
+PUT http://localhost:8000/api/v1/documents/145
+Content-Type: application/json
+
+{
+  "jsonContent": [
+                {
+                    "id": 0,
+                    "html": "<p data-id=\"3a5c30fc-971c-4edf-960b-be986e9298e2\">Line 1</p>"
+                },
+                {
+                    "id": 1,
+                    "html": "<p data-id=\"4361c8ec-d00e-4730-94da-36fe5083a766\">Line 2</p>"
+                }
+            ]
+}
+
+###
+GET http://localhost:8000/api/v1/projects
+
+### Angola == 15
+
+GET http://localhost:8000/api/v1/projects/15/components
+
+### Overview == 127
+GET http://localhost:8000/api/v1/documents?project_id=15&component_id=127
+
+### Introduction == 153
+GET http://localhost:8000/api/v1/documents/153
+
+### Introduction == 146, Givens == 147
+GET http://localhost:8000/api/v1/documents/153/html
+
+###
+GET http://localhost:8000/api/v1/projects/15/components/128uve/html
+
+###
+GET http://localhost:8000/api/v1/projects/docx
+Content-Type: application/json
+
+{
+  "type":"create_document",
+  "project_id": 15, 
+  "components":[{"id":127}]
+}
+
+  #{"id":128},{"id":131},{"id":132},{"id":138},{"id":129},{"id":137},{"id":130}

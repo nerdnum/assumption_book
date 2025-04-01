@@ -1,20 +1,34 @@
-from pydantic import BaseModel
 from typing import Optional
-from pydantic import EmailStr
-from pydantic.types import UUID4
+from datetime import datetime
+
 from fastapi_camelcase import CamelModel
+from pydantic import EmailStr
+
+from app.pydantic_models.project_model import (
+    Project,
+    ProjectWithRoles,
+    ProjectBasicInfo,
+)
+from app.pydantic_models.role_model import Role
 
 
 class UserBase(CamelModel):
-    username: str
-    email: EmailStr
     full_name: str
+    username: Optional[str] = None
+    preferred_name: Optional[str] = None
+    email: EmailStr
+
+    class Config:
+        from_attributes = True
 
 
 class UserUpdate(UserBase):
-    username: Optional[str] = None
-    email: Optional[EmailStr] = None
     full_name: Optional[str] = None
+    username: Optional[str] = None
+    preferred_name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    is_active: Optional[bool] = None
+    is_superuser: Optional[bool] = None
 
 
 class UserCreate(UserBase):
@@ -24,45 +38,37 @@ class UserCreate(UserBase):
 class User(UserBase):
     id: int
     uuid: str
+    is_active: Optional[bool] = True
+    is_first_login: Optional[bool] = True
+    is_superuser: Optional[bool] = False
 
-    class Config:
-        from_attributes = True
+
+class FullUser(User):
+    is_active: Optional[bool] = True
+    is_first_login: Optional[bool] = True
+    is_superuser: Optional[bool] = False
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+    created_by: Optional[int] = None
+    updated_by: Optional[int] = None
 
 
 class UserInDB(User):
     password: str
-    disabled: bool = True
+    is_active: bool = True
 
 
-class RoleBase(BaseModel):
-    name: str
-    description: str | None = None
+class UserWithProjects(User):
+    projects: list["ProjectBasicInfo"] = []
 
 
-class RoleUpdate(RoleBase):
-    name: Optional[str] = None
-    description: Optional[str] = None
-
-
-class RoleCreate(RoleBase):
-    pass
-
-
-class Role(RoleBase):
-    id: int
-    uuid: str
-
-    class Config:
-        from_attributes = True
-
-
-class RoleInDB(Role):
-    disabled: bool = True
-
-
-class RoleWithUsers(Role):
-    users: list["User"] = []
+class ProjectWithUsers(Project):
+    users: list[User] = []
 
 
 class UserWithRoles(User):
     roles: list["Role"] = []
+
+
+class UserWithProjectRoles(User):
+    projects: list["ProjectWithRoles"] = []

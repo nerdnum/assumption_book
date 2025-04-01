@@ -1,10 +1,11 @@
-import psycopg2
 import json
+
+import psycopg2
 from slugify import slugify
 
 
 def get_config():
-    with open('config.json') as f:
+    with open("config.json") as f:
         return json.load(f)["db_url"]
 
 
@@ -21,7 +22,9 @@ def slugify_components(connection):
     cursor.close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     url = get_config()
-    with psycopg2.connect(host="localhost", dbname="fastapi", user="postgres", password="!Nerdnum#1") as connection:
+    with psycopg2.connect(
+        host="localhost", dbname="fastapi", user="postgres", password=""
+    ) as connection:
         slugify_components(connection)

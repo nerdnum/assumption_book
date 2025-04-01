@@ -32,25 +32,44 @@ class ComponentBase(AsyncValidationModelMixin, CamelModel):
 
     async def check_for_duplicate_title_in_base(self, value: str):
         async with sessionmanager.session() as session:
-            component = (await
-                         session.execute(select(SqlComponent)
-                                         .where(SqlComponent.title == value)
-                                         .where(SqlComponent.project_id == self.project_id)
-                                         .where(SqlComponent.parent_id == None))).scalars().first()
+            component = (
+                (
+                    await session.execute(
+                        select(SqlComponent)
+                        .where(SqlComponent.title == value)
+                        .where(SqlComponent.project_id == self.project_id)
+                        .where(SqlComponent.parent_id == None)
+                    )
+                )
+                .scalars()
+                .first()
+            )
             if component is not None:
-                raise ValueError(f"A level 0 component with title '{
-                    self.title}' already exists for this project")
-                
+                raise ValueError(
+                    f"A level 0 component with title '{
+                    self.title}' already exists for this project"
+                )
+
     async def check_for_duplicate_title_for_parent(self, value: str):
         async with sessionmanager.session() as session:
-            component = (await
-                         session.execute(select(SqlComponent)
-                                         .where(SqlComponent.title == value)
-                                         .where(SqlComponent.project_id == self.project_id)
-                                         .where(SqlComponent.parent_id == self.parent_id))).scalars().first()
+            component = (
+                (
+                    await session.execute(
+                        select(SqlComponent)
+                        .where(SqlComponent.title == value)
+                        .where(SqlComponent.project_id == self.project_id)
+                        .where(SqlComponent.parent_id == self.parent_id)
+                    )
+                )
+                .scalars()
+                .first()
+            )
             if component is not None:
-                raise ValueError(f"A level child component with title '{
-                    self.title}' already exists for this component")
+                raise ValueError(
+                    f"A level child component with title '{
+                    self.title}' already exists for this component"
+                )
+
 
 class ComponentCreate(ComponentBase):
     level: IDType
@@ -59,8 +78,8 @@ class ComponentCreate(ComponentBase):
     @classmethod
     def validate_model_before(cls, data: any):
         # NB: NB use camelCase for the keys in the data dictionary
-        if data.get('parentId') is not None:
-            if data.get('level') == 0:
+        if data.get("parentId") is not None:
+            if data.get("level") == 0:
                 raise ValueError("A level 0 component cannot have a parent")
         return data
 
@@ -79,32 +98,54 @@ class ComponentCreate(ComponentBase):
     async def validate_component_is_unique_for_parent_id(self, value: int):
         if value is None:
             if self.level > 0:
-                raise ValueError(
-                    'A component at levels 1 or higher must have a parent')
+                raise ValueError("A component at levels 1 or higher must have a parent")
         else:
             async with sessionmanager.session() as session:
-                parent = (await session.execute(select(SqlComponent)
-                                                .where(SqlComponent.id == self.parent_id)
-                                                .options(selectinload(SqlComponent.descendants)))).scalars().first()
+                parent = (
+                    (
+                        await session.execute(
+                            select(SqlComponent)
+                            .where(SqlComponent.id == self.parent_id)
+                            .options(selectinload(SqlComponent.descendants))
+                        )
+                    )
+                    .scalars()
+                    .first()
+                )
                 if parent is None:
                     raise ValueError("Parent component does not exist")
                 if self.level == parent.level:
                     raise ValueError(
-                        "A descendant component cannot be on the same level as the parent")
+                        "A descendant component cannot be on the same level as the parent"
+                    )
                 if self.level != parent.level + 1:
                     raise ValueError(
-                        "Component level can only be one higher than the parent level")
+                        "Component level can only be one higher than the parent level"
+                    )
 
-    @async_field_validator("sequence")
-    async def check_sequence_unique(self, value: int):
-        async with sessionmanager.session() as session:
-            component = (await session.execute(select(SqlComponent).where(SqlComponent.sequence == self.sequence)
-                                               .where(SqlComponent.project_id == self.project_id)
-                                               )).scalars().first()
-            if component is not None:
-                raise ValueError(
-                    "Component with this sequence number already exists for this parent ID")
+    ### The sequence check below prevents the reordering of components.
+    ### For that reason it is disabled. The frontend should ensure that the sequences
+    ### are unique and in the correct order before sending the data to the backend.
 
+    # @async_field_validator("sequence")
+    # async def check_sequence_unique(self, value: int):
+    #     async with sessionmanager.session() as session:
+    #         component = (
+    #             (
+    #                 await session.execute(
+    #                     select(SqlComponent)
+    #                     .where(SqlComponent.sequence == self.sequence)
+    #                     .where(SqlComponent.project_id == self.project_id)
+    #                     .where(SqlComponent.parent_id == self.parent_id)
+    #                 )
+    #             )
+    #             .scalars()
+    #             .first()
+    #         )
+    #         if component is not None:
+    #             raise ValueError(
+    #                 "Component with this sequence number already exists for this parent ID"
+    #             )
 
     # @async_model_validator(mode="before")
     # async def validate_model_before(self):
@@ -122,53 +163,94 @@ class ComponentUpdate(ComponentBase):
     async def validate_component_title_is_unique_for_parent_id(self, value: int):
         async with sessionmanager.session() as session:
             async with sessionmanager.session() as session:
-                component = (await
-                             session.execute(select(SqlComponent)
-                                             .where(SqlComponent.id != self.id)
-                                             .where(SqlComponent.title == value)
-                                             .where(SqlComponent.project_id == self.project_id)
-                                             .where(SqlComponent.parent_id == self.parent_id)
-                                             )).scalars().first()
+                component = (
+                    (
+                        await session.execute(
+                            select(SqlComponent)
+                            .where(SqlComponent.id != self.id)
+                            .where(SqlComponent.title == value)
+                            .where(SqlComponent.project_id == self.project_id)
+                            .where(SqlComponent.parent_id == self.parent_id)
+                        )
+                    )
+                    .scalars()
+                    .first()
+                )
                 if component is not None:
                     if self.parent_id is None:
                         raise ValueError(
-                            f"A level 0 component with title '{self.title}' already exists for this project")
+                            f"A level 0 component with title '{self.title}' already exists for this project"
+                        )
                     else:
                         raise ValueError(
-                            f"A component with title '{self.title}' already exists for the parent component")
+                            f"A component with title '{self.title}' already exists for the parent component"
+                        )
 
     @async_field_validator("parent_id")
     async def validate_component_is_unique_for_parent_id(self, value: int):
         if value is not None:
             async with sessionmanager.session() as session:
-                parent = (await session.execute(select(SqlComponent)
-                                                .where(SqlComponent.id == self.parent_id)
-                                                .options(selectinload(SqlComponent.descendants)))).scalars().first()
+                parent = (
+                    (
+                        await session.execute(
+                            select(SqlComponent)
+                            .where(SqlComponent.id == self.parent_id)
+                            .options(selectinload(SqlComponent.descendants))
+                        )
+                    )
+                    .scalars()
+                    .first()
+                )
                 if parent is None:
                     raise ValueError("Parent component does not exist")
                 if self.level == parent.level:
                     raise ValueError(
-                        "A descendant component cannot be on the same level as the parent")
+                        "A descendant component cannot be on the same level as the parent"
+                    )
                 if self.level != parent.level + 1:
                     raise ValueError(
-                        "Component level can only be one higher than the parent level")
+                        "Component level can only be one higher than the parent level"
+                    )
 
-    @async_field_validator("sequence")
-    async def check_sequence_unique(self, value: int):
-        async with sessionmanager.session() as session:
-            if self.parent_id is None:
-                component = (await session.execute(select(SqlComponent).where(SqlComponent.sequence == self.sequence)
-                                                   .where(SqlComponent.project_id == self.project_id)
-                                                   .where(SqlComponent.parent_id == None)
-                                                   .where(SqlComponent.id != self.id))).scalars().first()
-            else:
-                component = (await session.execute(select(SqlComponent).where(SqlComponent.sequence == self.sequence)
-                                                   .where(SqlComponent.project_id == self.project_id)
-                                                   .where(SqlComponent.parent_id == self.parent_id)
-                                                   .where(SqlComponent.id != self.id))).scalars().first()
-            if component is not None:
-                raise ValueError(
-                    "Component with this sequence number already exists for this parent ID")
+    ### The sequence check below prevents the reordering of components.
+    ### For that reason it is disabled. The frontend should ensure that the sequences
+    ### are unique and in the correct order before sending the data to the backend.
+
+    # @async_field_validator("sequence")
+    # async def check_sequence_unique(self, value: int):
+    #     async with sessionmanager.session() as session:
+    #         if self.parent_id is None:
+    #             component = (
+    #                 (
+    #                     await session.execute(
+    #                         select(SqlComponent)
+    #                         .where(SqlComponent.sequence == self.sequence)
+    #                         .where(SqlComponent.project_id == self.project_id)
+    #                         .where(SqlComponent.parent_id == None)
+    #                         .where(SqlComponent.id != self.id)
+    #                     )
+    #                 )
+    #                 .scalars()
+    #                 .first()
+    #             )
+    #         else:
+    #             component = (
+    #                 (
+    #                     await session.execute(
+    #                         select(SqlComponent)
+    #                         .where(SqlComponent.sequence == self.sequence)
+    #                         .where(SqlComponent.project_id == self.project_id)
+    #                         .where(SqlComponent.parent_id == self.parent_id)
+    #                         .where(SqlComponent.id != self.id)
+    #                     )
+    #                 )
+    #                 .scalars()
+    #                 .first()
+    #             )
+    #         if component is not None:
+    #             raise ValueError(
+    #                 "Component with this sequence number already exists for this parent ID"
+    #             )
 
 
 class Component(ComponentBase):
@@ -184,7 +266,7 @@ class ComponentWithDescendants(ComponentBase):
     id: int
     uuid: str
 
-    descendants: Optional[list['ComponentWithDescendants']] = []
+    descendants: Optional[list["ComponentWithDescendants"]] = []
 
     class Config:
         from_attributes = True
@@ -196,9 +278,14 @@ class ComponentDelete(Component):
     async def validate_component_exists(self, value: int):
         async with sessionmanager.session() as session:
             try:
-                component = (await session.execute(select(SqlComponent).where(SqlComponent.id == self.id).options(selectinload(SqlComponent.descendants)))).scalar_one()
+                component = (
+                    await session.execute(
+                        select(SqlComponent)
+                        .where(SqlComponent.id == self.id)
+                        .options(selectinload(SqlComponent.descendants))
+                    )
+                ).scalar_one()
                 if len(component.descendants) > 0:
-                    raise ValueError(
-                        "Cannot delete a component with descendants")
+                    raise ValueError("Cannot delete a component with descendants")
             except Exception as error:
                 raise error

@@ -6,36 +6,73 @@ from typing import List
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from pydantic_async_validation.fastapi import ensure_request_validation_errors
-from sqlalchemy.exc import IntegrityError, NoResultFound
+from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.pydantic_models.document_model import (
     Document,
+    DocumentCount,
     DocumentCreate,
-    DocumentCreateResponse,
+    DocumentUpdate,
 )
 
 # App imports
 from app.services.database import get_db
 from app.sqlalchemy_models.components_sql import Component as SqlCompoment
 from app.sqlalchemy_models.documents_sql import Document as SqlDocument
-from app.sqlalchemy_models.projects_sql import Project as SqlProject
+from app.sqlalchemy_models.user_project_role_sql import Project as SqlProject
 
 pp = pprint.PrettyPrinter(indent=4)
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 
 
+@router.get("/count", response_model=DocumentCount)
+async def get_documents_count(
+    project_id: int, component_id: int, db: AsyncSession = Depends(get_db)
+) -> DocumentCount:
+    # TODO: add test of this endpoint
+    try:
+        # check if project exists
+        await SqlProject.get_project_by_id(db, project_id)
+        # check if component exists
+        component = await SqlCompoment.get_by_id(db, component_id)
+        if component.project_id != project_id:
+            raise ValueError("Component not found")
+        documents = await SqlDocument.get_by_project_and_component_ids(
+            db, project_id, component_id
+        )
+    except NoResultFound:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
+        )
+    except ValueError as error:
+        if str(error).find("not found"):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail=str(error)
+            )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error))
+    return {
+        "project_id": project_id,
+        "component_id": component_id,
+        "count": len(documents),
+    }
+
+
 @router.get("", response_model=list[Document], response_model_exclude_unset=True)
-async def get_documents(
+async def get_documents_by_project_and_component_ids(
     project_id: int, component_id: int, db: AsyncSession = Depends(get_db)
 ):
     try:
         # check if project exists
-        await SqlProject.get_by_id(db, project_id)
+        await SqlProject.get_project_by_id(db, project_id)
         # check if component exists
-        await SqlCompoment.get_by_id(db, component_id)
-        documents = await SqlDocument.get_by_ids(db, project_id, component_id)
+        component = await SqlCompoment.get_by_id(db, component_id)
+        if component.project_id != project_id:
+            raise ValueError("Component not found")
+        documents = await SqlDocument.get_by_project_and_component_ids(
+            db, project_id, component_id
+        )
     except NoResultFound:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
@@ -50,9 +87,7 @@ async def get_documents(
     return documents
 
 
-@router.get(
-    "/{document_id:int}", response_model=Document, response_model_exclude_unset=True
-)
+@router.get("/{document_id:int}", response_model=Document)
 async def get_document_by_id(
     document_id: int, db: AsyncSession = Depends(get_db)
 ) -> Document:
@@ -70,18 +105,14 @@ async def get_document_by_id(
 #         component = await SqlComponent.create(db, **component.model_dump())
 
 
-@router.post(
-    "", response_model=DocumentCreateResponse, status_code=status.HTTP_201_CREATED
-)
+@router.post("", response_model=Document, status_code=status.HTTP_201_CREATED)
 async def create_document(
     document: DocumentCreate, db: AsyncSession = Depends(get_db)
 ) -> DocumentCreate:
     try:
         with ensure_request_validation_errors("body"):
             await document.model_async_validate()
-        document = await SqlDocument.create(
-            db, **document.model_dump(exclude_unset=True)
-        )
+        document = await SqlDocument.create(db, **document.model_dump())
     except ValueError as error:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error))
     return document
@@ -89,11 +120,22 @@ async def create_document(
 
 @router.put("/{document_id}", response_model=Document)
 async def update_document(
-    document_id: int, document: Document, db: AsyncSession = Depends(get_db)
+    document_id: int, document: DocumentUpdate, db: AsyncSession = Depends(get_db)
 ):
+    ## TODO: discrimate more between fields that are required for update
+    ## all fields should be optional and can be updated
+    ## test all fields of the document except document_id, project_id and component_id
     try:
+        document_dict = document.model_dump()
         document = await SqlDocument.update_content_by_id(
-            db, document_id, document.model_dump(exclude_unset=True)["content"]
+            db,
+            document_id,
+            title=document_dict.get("title"),
+            sequence=document_dict.get("sequence"),
+            context=document_dict.get("context"),
+            html_content=document_dict.get("html_content"),
+            json_content=document_dict.get("json_content"),
+            interface_id=document_dict.get("interface_id"),
         )
     except ValueError as error:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error))
@@ -127,3 +169,21 @@ async def delete_document(document_id: int, db: AsyncSession = Depends(get_db)):
     except ValueError as error:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error))
     return {"id": document_id, "status": "deleted"}
+
+
+@router.get("/{document_id}/html")
+async def get_document_html(
+    document_id: int, db: AsyncSession = Depends(get_db)
+) -> str:
+    try:
+        document_html = await SqlDocument.get_html_by_document_id(db, document_id)
+        # buf = html2docx(document_html, title="My Document")
+        # cwd = os.getcwd()
+        # store_path = os.path.join(cwd, "app", "static", f"document_{document_id}.docx")
+        # with open(store_path, "wb") as fp:
+        #     fp.write(buf.getvalue())
+    except ValueError as error:
+        if str(error) == "Document not found":
+            raise HTTPException(status_code=404, detail=str(error))
+        raise HTTPException(status_code=400, detail=str(error))
+    return document_html

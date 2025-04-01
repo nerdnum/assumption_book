@@ -1,8 +1,11 @@
+import os
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic_async_validation.fastapi import ensure_request_validation_errors
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.html2docx.htmldocx import HtmlToDocx
 from app.pydantic_models.component_model import (
     Component,
     ComponentCreate,
@@ -11,6 +14,7 @@ from app.pydantic_models.component_model import (
     ComponentWithDescendants,
 )
 from app.services.database import get_db
+from app.services.utils import pretty_print
 from app.sqlalchemy_models.components_sql import Component as SqlComponent
 
 router = APIRouter(prefix="/components", tags=["components"])
@@ -64,7 +68,8 @@ async def get_root_component_hierarchy(
     root_components = await SqlComponent.get_root_components(db, project_id)
     for component in root_components:
         component_dict = Component.model_validate(component).model_dump()
-        component_dict["descendants"] = await get_descendants(db, component.id, 10, 0)
+        descendants = await get_descendants(db, component.id, 10, 0)
+        component_dict["descendants"] = descendants
         component_list.append(component_dict)
     return component_list
 
@@ -94,6 +99,36 @@ async def get_hierarchy(
     # Ok as on 2024-06-25 11:53
     hierarchy = await get_root_component_hierarchy(project_id, db)
     return hierarchy
+
+
+@router.get("/{component_id:int}/descendants", response_model=list[Component])
+async def get_component_by_id_with_descendants(
+    project_id: int, component_id: int, db: AsyncSession = Depends(get_db)
+) -> list[Component]:
+    try:
+        descendants = await get_descendants(db, component_id)
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error))
+    return descendants
+
+
+@router.get("/{component_id:int}/html", response_model=str)
+async def get_component_html_by_id(
+    component_id: int, db: AsyncSession = Depends(get_db)
+) -> str:
+    try:
+        component_html = await SqlComponent.get_html_by_id(db, component_id)
+        parser = HtmlToDocx()
+        parser.table_style = "Colorful Grid Accent 1"
+        docx = parser.parse_html_string(component_html)
+        cwd = os.getcwd()
+        store_path = os.path.join(
+            cwd, "app", "static", f"component_{component_id}.docx"
+        )
+        docx.save(store_path)
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error))
+    return component_html
 
 
 @router.get("/{component_id:int}", response_model=Component)
@@ -157,17 +192,6 @@ async def create_component(
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error))
     return component
-
-
-@router.get("/{component_id:int}/descendants", response_model=list[Component])
-async def get_component_by_id_with_descendants(
-    project_id: int, component_id: int, db: AsyncSession = Depends(get_db)
-) -> list[Component]:
-    try:
-        descendants = await get_descendants(db, component_id)
-    except ValueError as error:
-        raise HTTPException(status_code=400, detail=str(error))
-    return descendants
 
 
 @router.put("/{component_id:int}", response_model=Component)

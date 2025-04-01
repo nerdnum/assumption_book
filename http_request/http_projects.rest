@@ -8,9 +8,10 @@ POST http://localhost:8000/api/v1/projects
 Content-Type: application/json
 
 {
-    "title": "Amun",
-    "description": "This imaginary project contains all the template components",
-    "project_manager": "System Administrator"
+    "title": "Angola",
+    "description": "600 MW Green Ammonia Project",
+    "project_manager": "Louis Becker",
+    "logo_url": "/images/flag_of_angola.png"
 }
 
 ###

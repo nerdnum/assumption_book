@@ -12,10 +12,9 @@ from app.services.database import Base
 from app.sqlalchemy_models import (
     components_sql,  # noqa
     documents_sql,  # noqa
-    projects_sql,  # noqa
     setting_types_sql,  # noqa
     settings_sql,  # noqa
-    users_sql,  # noqa
+    user_project_role_sql,  # noqa
 )
 
 # get the app config from the json file

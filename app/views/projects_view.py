@@ -1,29 +1,148 @@
 # Standard libary imports
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.pydantic_models.project_model import Project, ProjectCreate, ProjectUpdate
+from app.pydantic_models.project_model import (
+    DocResponse,
+    DocSpec,
+    Project,
+    ProjectCreate,
+    ProjectUpdate,
+    ProjectWithRoles,
+)
 
 # App imports
+from app.pydantic_models.role_model import Role
+from app.pydantic_models.user_model import ProjectWithUsers
+from app.pydantic_models.project_model import ProjectBasicInfo
+from app.services.create_docx import create_project_docx
 from app.services.database import get_db
-from app.sqlalchemy_models.projects_sql import Project as SqlProject
+from app.sqlalchemy_models.user_project_role_sql import Project as SqlProject
+from app.sqlalchemy_models.user_project_role_sql import User as SqlUser
+from app.views.auth_view import get_current_active_user
+
+# App imports
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
 
-@router.get("", response_model=list[Project])
-async def get_all_projects(db: AsyncSession = Depends(get_db)):
+@router.get("/user-projects", response_model=list[Project])
+async def get_current_user_projects(
+    current_user: Annotated[SqlUser, Depends(get_current_active_user)] = None,
+):
+    return current_user.projects
+
+
+@router.get("", response_model=list[ProjectBasicInfo])
+async def get_all_projects(
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[SqlUser, Depends(get_current_active_user)] = None,
+):
     projects = await SqlProject.get_all(db)
     return projects
 
 
 @router.post("", response_model=Project, status_code=status.HTTP_201_CREATED)
-async def create_project(project: ProjectCreate, db: AsyncSession = Depends(get_db)):
+async def create_project(
+    project: ProjectCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[SqlUser, Depends(get_current_active_user)] = None,
+):
     try:
-        project = await SqlProject.create(db, **project.model_dump())
+        project = await SqlProject.create(
+            db, **project.model_dump(), user_id=current_user.id
+        )
     except ValueError as error:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error))
     return project
+
+
+@router.get("/docx", response_model=DocResponse)
+async def get_project_document_by_id(
+    spec: DocSpec, db: AsyncSession = Depends(get_db)
+) -> str:
+    document_path = await create_project_docx(spec, db)
+    return document_path
+
+
+@router.get("/{id:int}", response_model=Project)
+async def get_project_by_id(id: int, db: AsyncSession = Depends(get_db)) -> Project:
+    try:
+        project = await SqlProject.get_project_by_id(db, id)
+    except ValueError as error:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error))
+    return project
+
+
+@router.get("/{id:int}/roles", response_model=ProjectWithRoles)
+async def get_project_roles(id: int, db: AsyncSession = Depends(get_db)) -> Project:
+    try:
+        project = await SqlProject.get_project_by_id(db, id)
+    except ValueError as error:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error))
+    return project
+
+
+@router.get("/{id:int}/users", response_model=ProjectWithUsers)
+async def get_project_users(
+    id: int, db: AsyncSession = Depends(get_db)
+) -> ProjectWithUsers:
+    try:
+        project = await SqlProject.get_project_by_id(db, id)
+    except ValueError as error:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error))
+    return project
+
+
+@router.put(
+    "/{id:int}",
+    response_model=Project,
+)
+async def update_project_by_id(
+    id: int,
+    project: ProjectUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[SqlUser, Depends(get_current_active_user)] = None,
+) -> Project:
+    try:
+        project = await SqlProject.update_by_id(
+            db, id, **project.model_dump(), user_id=current_user.id
+        )
+    except ValueError as error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error))
+    return project
+
+
+@router.post(
+    "/{id:int}/roles/{role_id:int}",
+    response_model=Role,
+)
+async def add_project_role(
+    id: int,
+    role_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[SqlUser, Depends(get_current_active_user)] = None,
+) -> Project:
+    try:
+        role = await SqlProject.add_project_role(db, id, role_id, current_user.id)
+    except ValueError as error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error))
+    return role
+
+
+@router.delete("/{id:int}", response_model=Project)
+async def delete_project_by_id(
+    id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[SqlUser, Depends(get_current_active_user)] = None,
+) -> Project:
+    try:
+        result = await SqlProject.delete_by_id(db, id)
+    except ValueError as error:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error))
+    return result
 
 
 @router.get("/framework", response_model=None)
@@ -79,8 +198,8 @@ def get_framework():
         {
             "sequence": 9,
             "defaultText": "This is the default text",
-            "title": "Interfaces",
-            "context": "parameters",
+            "title": "Interface",
+            "context": "interface",
         },
         {
             "sequence": 10,
@@ -119,32 +238,3 @@ def get_framework():
             "context": "parameters",
         },
     ]
-
-
-@router.get("/{id:int}", response_model=Project)
-async def get_project_by_id(id: int, db: AsyncSession = Depends(get_db)) -> Project:
-    try:
-        project = await SqlProject.get_by_id(db, id)
-    except ValueError as error:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error))
-    return project
-
-
-@router.put("/{id:int}", response_model=Project)
-async def update_project_by_id(
-    id: int, project: ProjectUpdate, db: AsyncSession = Depends(get_db)
-) -> Project:
-    try:
-        project = await SqlProject.update_by_id(db, id, **project.model_dump())
-    except ValueError as error:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error))
-    return project
-
-
-@router.delete("/{id:int}", response_model=Project)
-async def delete_project_by_id(id: int, db: AsyncSession = Depends(get_db)) -> Project:
-    try:
-        result = await SqlProject.delete_by_id(db, id)
-    except ValueError as error:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error))
-    return result
