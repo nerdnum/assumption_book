@@ -41,11 +41,11 @@ test_config.json
 zz_backup
 app/static/document_images
 app/static/docx
-utils
+utils/
 test.json
 DECISION_LOG.txt
-tests
-t_e_s_t_backup
+tests/
+t_e_s_t_backup/
 pytest.ini
 play_with_components.py
-http_request
+http_request/
