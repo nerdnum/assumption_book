@@ -185,14 +185,25 @@ class User(BaseEntity):
         email: str,
         user_id: int,
         is_active: bool = True,
+        is_superuser: bool = False,
     ) -> "User":
-        print("create", username, full_name, email, is_active, user_id)
+        print(
+            "create",
+            username,
+            full_name,
+            preferred_name,
+            email,
+            is_active,
+            is_superuser,
+            user_id,
+        )
         user = cls(
             full_name=full_name,
             username=username,
             preferred_name=preferred_name,
             email=email,
             is_active=is_active,
+            is_superuser=is_superuser,
             uuid=str(uuid4()),
             created_by=user_id,
             updated_by=user_id,

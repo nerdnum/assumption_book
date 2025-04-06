@@ -17,6 +17,8 @@ class UserBase(CamelModel):
     username: Optional[str] = None
     preferred_name: Optional[str] = None
     email: EmailStr
+    is_active: Optional[bool] = None
+    is_superuser: Optional[bool] = None
 
     class Config:
         from_attributes = True

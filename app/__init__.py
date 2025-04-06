@@ -13,14 +13,11 @@ from app.services.database import sessionmanager
 
 
 async def verify_auth(authorization: Annotated[str, Header()]):
-    print("Running verify auth")
     if not authorization:
         raise HTTPException(status_code=401, detail="Not authenticated")
 
 
 def check_request(request: Request):
-    print(request.url)
-    print(request.headers)
     return request
 
 

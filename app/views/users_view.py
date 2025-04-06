@@ -48,7 +48,14 @@ async def create_user(
 ):
     try:
         user = await SqlUser.create(
-            db, user.username, user.full_name, user.email, current_user.id
+            db,
+            username=user.username or None,
+            full_name=user.full_name,
+            preferred_name=user.preferred_name or None,
+            email=user.email.lower(),
+            is_active=user.is_active,
+            is_superuser=user.is_superuser,
+            user_id=current_user.id,
         )
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error))
@@ -113,7 +120,7 @@ async def update_user(
             user.full_name,
             user.username,
             user.preferred_name,
-            user.email,
+            user.email.lower() if user.email else None,
             user.is_active,
             user.is_superuser,
             current_user.id,

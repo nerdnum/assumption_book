@@ -251,7 +251,9 @@ async def login(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
 ) -> TokenResponse:
     try:
-        user = await authenticate_user_by_email(form_data.username, form_data.password)
+        user = await authenticate_user_by_email(
+            form_data.username.lower(), form_data.password
+        )
         if not user.is_active:
             raise HTTPException(status_code=401, detail="Inactive user")
         user_data = make_token_user(user)
