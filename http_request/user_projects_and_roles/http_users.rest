@@ -23,7 +23,7 @@ GET http://localhost:8000/api/v1/users
 
 
 ###
-POST http://localhost:8000/api/v1/auth/users/17/set_auth
+POST http://192.168.52.193:8000/api/v1/auth/set_auth/1
 content-type: application/json
 
 {

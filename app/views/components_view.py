@@ -4,7 +4,11 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic_async_validation.fastapi import ensure_request_validation_errors
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from typing import Annotated
 
+
+from app.views.auth_view import get_current_user_with_roles
+from app.sqlalchemy_models.user_project_role_sql import User as SqlUser
 from app.html2docx.htmldocx import HtmlToDocx
 from app.pydantic_models.component_model import (
     Component,
@@ -17,6 +21,7 @@ from app.services.database import get_db
 from app.services.utils import pretty_print
 from app.sqlalchemy_models.components_sql import Component as SqlComponent
 
+
 router = APIRouter(prefix="/components", tags=["components"])
 
 
@@ -27,7 +32,11 @@ router = APIRouter(prefix="/components", tags=["components"])
 
 
 async def get_descendants(
-    db: AsyncSession, component_id: int, recursion_level: int = 10, level: int = 0
+    db: AsyncSession,
+    component_id: int,
+    recursion_level: int = 10,
+    level: int = 0,
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
 ) -> list[dict]:
     descendants = []
     if level < recursion_level:
@@ -53,7 +62,9 @@ async def get_descendants(
 
 
 async def get_component_hierarchy(
-    component_id: int, levels: int = 1, db: AsyncSession = Depends(get_db)
+    component_id: int,
+    levels: int = 1,
+    db: AsyncSession = Depends(get_db),
 ) -> list[ComponentWithDescendants]:
     component = await SqlComponent.get_by_id(db, component_id)
     component_dict = Component.model_validate(component).model_dump()
@@ -62,7 +73,8 @@ async def get_component_hierarchy(
 
 
 async def get_root_component_hierarchy(
-    project_id: int, db: AsyncSession = Depends(get_db)
+    project_id: int,
+    db: AsyncSession = Depends(get_db),
 ) -> list[ComponentWithDescendants]:
     component_list = []
     root_components = await SqlComponent.get_root_components(db, project_id)
@@ -76,7 +88,9 @@ async def get_root_component_hierarchy(
 
 @router.get("", response_model=list[Component])
 async def get_components(
-    project_id: int, db: AsyncSession = Depends(get_db)
+    project_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
 ) -> list[Component]:
     # Ok as on 2024-06-25 11:50
     components = await SqlComponent.get_all(db, project_id)
@@ -85,7 +99,9 @@ async def get_components(
 
 @router.get("/root-components", response_model=list[Component])
 async def root_components(
-    project_id: int, db: AsyncSession = Depends(get_db)
+    project_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
 ) -> list[Component]:
     # Ok as on 2024-06-25 11:53
     root_components = await SqlComponent.get_root_components(db, project_id)
@@ -94,7 +110,9 @@ async def root_components(
 
 @router.get("/hierarchy", response_model=list[ComponentWithDescendants])
 async def get_hierarchy(
-    project_id: int, db: AsyncSession = Depends(get_db)
+    project_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
 ) -> list[ComponentWithDescendants]:
     # Ok as on 2024-06-25 11:53
     hierarchy = await get_root_component_hierarchy(project_id, db)
@@ -103,7 +121,10 @@ async def get_hierarchy(
 
 @router.get("/{component_id:int}/descendants", response_model=list[Component])
 async def get_component_by_id_with_descendants(
-    project_id: int, component_id: int, db: AsyncSession = Depends(get_db)
+    project_id: int,
+    component_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
 ) -> list[Component]:
     try:
         descendants = await get_descendants(db, component_id)
@@ -114,7 +135,9 @@ async def get_component_by_id_with_descendants(
 
 @router.get("/{component_id:int}/html", response_model=str)
 async def get_component_html_by_id(
-    component_id: int, db: AsyncSession = Depends(get_db)
+    component_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
 ) -> str:
     try:
         component_html = await SqlComponent.get_html_by_id(db, component_id)
@@ -133,7 +156,10 @@ async def get_component_html_by_id(
 
 @router.get("/{component_id:int}", response_model=Component)
 async def get_component(
-    project_id: int, component_id: int, db: AsyncSession = Depends(get_db)
+    project_id: int,
+    component_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
 ) -> Component:
     try:
         component = await SqlComponent.get_by_id(db, component_id)
@@ -150,6 +176,7 @@ async def create_component_by_parent_id(
     parent_id: int,
     component: ComponentCreate,
     db: AsyncSession = Depends(get_db),
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
 ) -> Component:
     # For level 1 components and above
 
@@ -169,6 +196,8 @@ async def create_component_by_parent_id(
             raise ValueError("Parent ID in json body does not match parent ID in URL")
         else:
             component.parent_id = parent_id
+        component.created_by = current_user.id
+        component.updated_by = current_user.id
         with ensure_request_validation_errors("body"):
             await component.model_async_validate()
         component = await SqlComponent.create(db, **component.model_dump())
@@ -179,7 +208,10 @@ async def create_component_by_parent_id(
 
 @router.post("", response_model=Component, status_code=status.HTTP_201_CREATED)
 async def create_component(
-    project_id: int, component: ComponentCreate, db: AsyncSession = Depends(get_db)
+    project_id: int,
+    component: ComponentCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
 ) -> Component:
     try:
         if component.project_id is None:
@@ -188,7 +220,9 @@ async def create_component(
             raise ValueError("Project ID in json body does not match project ID in URL")
         with ensure_request_validation_errors("body"):
             await component.model_async_validate()
-        component = await SqlComponent.create(db, **component.model_dump())
+        component = await SqlComponent.create(
+            db, **component.model_dump(), user_id=current_user.id
+        )
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error))
     return component
@@ -200,6 +234,7 @@ async def update_component_by_id(
     component_id: int,
     component: ComponentUpdate,
     db: AsyncSession = Depends(get_db),
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
 ) -> Component:
     try:
         sql_component_to_update = await SqlComponent.get_by_id(db, component_id)
@@ -214,7 +249,7 @@ async def update_component_by_id(
         with ensure_request_validation_errors("body"):
             await updated_component.model_async_validate()
         component = await SqlComponent.update(
-            db, component_id, **updated_component.model_dump()
+            db, component_id, **updated_component.model_dump(), user_id=current_user.id
         )
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error))
@@ -223,7 +258,9 @@ async def update_component_by_id(
 
 @router.delete("/{component_id:int}", response_model=Component)
 async def delete_component(
-    component_id: int, db: AsyncSession = Depends(get_db)
+    component_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
 ) -> Component:
     try:
         component = await SqlComponent.get_by_id(db, component_id)

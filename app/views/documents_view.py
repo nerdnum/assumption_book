@@ -2,7 +2,7 @@ import os
 import pprint
 import uuid
 from time import sleep
-from typing import List
+from typing import List, Annotated
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from pydantic_async_validation.fastapi import ensure_request_validation_errors
@@ -21,6 +21,8 @@ from app.services.database import get_db
 from app.sqlalchemy_models.components_sql import Component as SqlCompoment
 from app.sqlalchemy_models.documents_sql import Document as SqlDocument
 from app.sqlalchemy_models.user_project_role_sql import Project as SqlProject
+from app.sqlalchemy_models.user_project_role_sql import User as SqlUser
+from app.views.auth_view import get_current_user_with_roles
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -29,7 +31,10 @@ router = APIRouter(prefix="/documents", tags=["documents"])
 
 @router.get("/count", response_model=DocumentCount)
 async def get_documents_count(
-    project_id: int, component_id: int, db: AsyncSession = Depends(get_db)
+    project_id: int,
+    component_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
 ) -> DocumentCount:
     # TODO: add test of this endpoint
     try:
@@ -61,7 +66,10 @@ async def get_documents_count(
 
 @router.get("", response_model=list[Document], response_model_exclude_unset=True)
 async def get_documents_by_project_and_component_ids(
-    project_id: int, component_id: int, db: AsyncSession = Depends(get_db)
+    project_id: int,
+    component_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
 ):
     try:
         # check if project exists
@@ -89,7 +97,9 @@ async def get_documents_by_project_and_component_ids(
 
 @router.get("/{document_id:int}", response_model=Document)
 async def get_document_by_id(
-    document_id: int, db: AsyncSession = Depends(get_db)
+    document_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
 ) -> Document:
     try:
         document = await SqlDocument.get_by_document_id(db, document_id)
@@ -107,12 +117,16 @@ async def get_document_by_id(
 
 @router.post("", response_model=Document, status_code=status.HTTP_201_CREATED)
 async def create_document(
-    document: DocumentCreate, db: AsyncSession = Depends(get_db)
+    document: DocumentCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
 ) -> DocumentCreate:
     try:
         with ensure_request_validation_errors("body"):
             await document.model_async_validate()
-        document = await SqlDocument.create(db, **document.model_dump())
+        document = await SqlDocument.create(
+            db, **document.model_dump(), user_id=current_user.id
+        )
     except ValueError as error:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error))
     return document
@@ -120,7 +134,10 @@ async def create_document(
 
 @router.put("/{document_id}", response_model=Document)
 async def update_document(
-    document_id: int, document: DocumentUpdate, db: AsyncSession = Depends(get_db)
+    document_id: int,
+    document: DocumentUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
 ):
     ## TODO: discrimate more between fields that are required for update
     ## all fields should be optional and can be updated
@@ -136,6 +153,7 @@ async def update_document(
             html_content=document_dict.get("html_content"),
             json_content=document_dict.get("json_content"),
             interface_id=document_dict.get("interface_id"),
+            user_id=current_user.id,
         )
     except ValueError as error:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error))
@@ -143,7 +161,10 @@ async def update_document(
 
 
 @router.post("/upload_images")
-async def create_upload_file(files: List[UploadFile]):
+async def create_upload_file(
+    files: List[UploadFile],
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
+):
     filename_list = []
     for submitted_file in files:
         file_uuid = uuid.uuid4()
@@ -163,7 +184,11 @@ async def create_upload_file(files: List[UploadFile]):
 
 
 @router.delete("/{document_id}")
-async def delete_document(document_id: int, db: AsyncSession = Depends(get_db)):
+async def delete_document(
+    document_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
+):
     try:
         await SqlDocument.delete_by_id(db, document_id)
     except ValueError as error:
@@ -173,7 +198,9 @@ async def delete_document(document_id: int, db: AsyncSession = Depends(get_db)):
 
 @router.get("/{document_id}/html")
 async def get_document_html(
-    document_id: int, db: AsyncSession = Depends(get_db)
+    document_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
 ) -> str:
     try:
         document_html = await SqlDocument.get_html_by_document_id(db, document_id)

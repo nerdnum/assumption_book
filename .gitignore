@@ -38,9 +38,11 @@ test_config.json
 
 .coverage
 
+http*
 zz_backup
 app/static/document_images
 app/static/docx
+app/static/*
 utils/
 test.json
 DECISION_LOG.txt
@@ -48,4 +50,3 @@ tests/
 t_e_s_t_backup/
 pytest.ini
 play_with_components.py
-http_request/

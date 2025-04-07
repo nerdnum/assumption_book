@@ -21,7 +21,7 @@ from app.services.create_docx import create_project_docx
 from app.services.database import get_db
 from app.sqlalchemy_models.user_project_role_sql import Project as SqlProject
 from app.sqlalchemy_models.user_project_role_sql import User as SqlUser
-from app.views.auth_view import get_current_active_user
+from app.views.auth_view import get_current_user_with_roles
 
 # App imports
 
@@ -30,7 +30,7 @@ router = APIRouter(prefix="/projects", tags=["projects"])
 
 @router.get("/user-projects", response_model=list[Project])
 async def get_current_user_projects(
-    current_user: Annotated[SqlUser, Depends(get_current_active_user)] = None,
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
 ):
     return current_user.projects
 
@@ -38,7 +38,7 @@ async def get_current_user_projects(
 @router.get("", response_model=list[ProjectBasicInfo])
 async def get_all_projects(
     db: AsyncSession = Depends(get_db),
-    current_user: Annotated[SqlUser, Depends(get_current_active_user)] = None,
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
 ):
     projects = await SqlProject.get_all(db)
     return projects
@@ -48,7 +48,7 @@ async def get_all_projects(
 async def create_project(
     project: ProjectCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: Annotated[SqlUser, Depends(get_current_active_user)] = None,
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
 ):
     try:
         project = await SqlProject.create(
@@ -61,14 +61,20 @@ async def create_project(
 
 @router.get("/docx", response_model=DocResponse)
 async def get_project_document_by_id(
-    spec: DocSpec, db: AsyncSession = Depends(get_db)
+    spec: DocSpec,
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
 ) -> str:
     document_path = await create_project_docx(spec, db)
     return document_path
 
 
 @router.get("/{id:int}", response_model=Project)
-async def get_project_by_id(id: int, db: AsyncSession = Depends(get_db)) -> Project:
+async def get_project_by_id(
+    id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
+) -> Project:
     try:
         project = await SqlProject.get_project_by_id(db, id)
     except ValueError as error:
@@ -76,8 +82,13 @@ async def get_project_by_id(id: int, db: AsyncSession = Depends(get_db)) -> Proj
     return project
 
 
+# TODO - users should be able to see only their projects
 @router.get("/{id:int}/roles", response_model=ProjectWithRoles)
-async def get_project_roles(id: int, db: AsyncSession = Depends(get_db)) -> Project:
+async def get_project_roles(
+    id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
+) -> Project:
     try:
         project = await SqlProject.get_project_by_id(db, id)
     except ValueError as error:
@@ -87,7 +98,9 @@ async def get_project_roles(id: int, db: AsyncSession = Depends(get_db)) -> Proj
 
 @router.get("/{id:int}/users", response_model=ProjectWithUsers)
 async def get_project_users(
-    id: int, db: AsyncSession = Depends(get_db)
+    id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
 ) -> ProjectWithUsers:
     try:
         project = await SqlProject.get_project_by_id(db, id)
@@ -96,6 +109,7 @@ async def get_project_users(
     return project
 
 
+# TODO - users should be able to see only their projects
 @router.put(
     "/{id:int}",
     response_model=Project,
@@ -104,7 +118,7 @@ async def update_project_by_id(
     id: int,
     project: ProjectUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: Annotated[SqlUser, Depends(get_current_active_user)] = None,
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
 ) -> Project:
     try:
         project = await SqlProject.update_by_id(
@@ -123,7 +137,7 @@ async def add_project_role(
     id: int,
     role_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: Annotated[SqlUser, Depends(get_current_active_user)] = None,
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
 ) -> Project:
     try:
         role = await SqlProject.add_project_role(db, id, role_id, current_user.id)
@@ -136,7 +150,7 @@ async def add_project_role(
 async def delete_project_by_id(
     id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: Annotated[SqlUser, Depends(get_current_active_user)] = None,
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
 ) -> Project:
     try:
         result = await SqlProject.delete_by_id(db, id)
@@ -146,7 +160,9 @@ async def delete_project_by_id(
 
 
 @router.get("/framework", response_model=None)
-def get_framework():
+def get_framework(
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
+):
     return [
         {
             "sequence": 1,

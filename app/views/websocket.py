@@ -1,9 +1,12 @@
 import json
+from typing import Annotated
 
-from fastapi import APIRouter, WebSocket
+from fastapi import APIRouter, WebSocket, Depends
 from starlette.websockets import WebSocketDisconnect
 
 from app.pydantic_models.project_model import DocSpec
+from app.sqlalchemy_models.user_project_role_sql import User as SqlUser
+from app.views.auth_view import get_current_user_with_roles
 from app.services.create_docx import create_project_docx
 
 router = APIRouter(prefix="/ws", tags=["websocket"])
@@ -32,7 +35,9 @@ async def process_data(websocket, message):
 
 
 @router.websocket("")
-async def websocket_endpoint(websocket: WebSocket):
+async def websocket_endpoint(
+    websocket: WebSocket,
+):
 
     await websocket.accept()
     try:

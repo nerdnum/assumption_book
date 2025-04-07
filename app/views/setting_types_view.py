@@ -17,7 +17,10 @@ router = APIRouter(prefix="/setting-types", tags=["setting-types"])
 
 
 @router.get("", response_model=list[SettingType])
-async def get_setting_types(db: AsyncSession = Depends(get_db)):
+async def get_setting_types(
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
+):
     setting_types = await SqlSettingType.get_all(db)
     return setting_types
 
@@ -40,7 +43,11 @@ async def create_setting_type(
 
 
 @router.get("/{id}", response_model=SettingType)
-async def get_setting(id: int, db: AsyncSession = Depends(get_db)):
+async def get_setting(
+    id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
+):
     try:
         setting = await SqlSettingType.get(db, id)
     except ValueError as error:
@@ -50,7 +57,10 @@ async def get_setting(id: int, db: AsyncSession = Depends(get_db)):
 
 @router.put("/{id}", response_model=SettingType)
 async def update_setting(
-    id: int, setting_type: SettingTypeUpdate, db: AsyncSession = Depends(get_db)
+    id: int,
+    setting_type: SettingTypeUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
 ):
     try:
         setting_type = await SqlSettingType.update(db, id, **setting_type.model_dump())
@@ -60,7 +70,11 @@ async def update_setting(
 
 
 @router.delete("/{id}", response_model=None)
-async def delete_setting(id: int, db: AsyncSession = Depends(get_db)):
+async def delete_setting(
+    id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
+):
     try:
         result = await SqlSettingType.delete(db, id)
     except ValueError as error:

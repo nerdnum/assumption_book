@@ -89,7 +89,11 @@ async def do_deactivation(
 
 
 @router.get("/{id}", response_model=UserWithProjects)
-async def get_user(id: int, db: AsyncSession = Depends(get_db)):
+async def get_user(
+    id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
+):
     try:
         user = await SqlUser.get(db, id)
     except ValueError as error:
@@ -98,7 +102,11 @@ async def get_user(id: int, db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/{id}/authorizations", response_model=UserWithProjectRoles)
-async def get_user_authorisation(id: int, db: AsyncSession = Depends(get_db)):
+async def get_user_authorisation(
+    id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
+):
     try:
         user = await SqlUser.get_user_project_roles(db, id)
     except ValueError as error:
@@ -144,7 +152,11 @@ async def delete_user(
 
 
 @router.get("/{id}/projects", response_model=List[ProjectBasicInfo])
-async def get_user_projects(id: int, db: AsyncSession = Depends(get_db)):
+async def get_user_projects(
+    id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
+):
     try:
         user = await SqlUser.get(db, id)
     except ValueError as error:
@@ -197,7 +209,11 @@ async def set_user_projects(
 
 
 @router.get("/username/{username}", response_model=User)
-async def get_user_by_username(username: str, db: AsyncSession = Depends(get_db)):
+async def get_user_by_username(
+    username: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
+):
     try:
         user = await SqlUser.get_user_by_username(db, username)
     except ValueError as error:
@@ -206,7 +222,11 @@ async def get_user_by_username(username: str, db: AsyncSession = Depends(get_db)
 
 
 @router.get("/uuid/{uuid}", response_model=User)
-async def get_user_by_uuid(uuid: str, db: AsyncSession = Depends(get_db)):
+async def get_user_by_uuid(
+    uuid: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
+):
     try:
         user = await SqlUser.get_user_by_uuid(db, uuid)
     except ValueError as error:
@@ -235,7 +255,11 @@ async def add_role_for_user(
 
 
 @router.get("/{id}/roles", response_model=UserWithProjectRoles)
-async def get_user_with_roles(id: int, db: AsyncSession = Depends(get_db)):
+async def get_user_with_roles(
+    id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
+):
     try:
         user = await SqlUser.get(db, id)
     except ValueError as error:
@@ -245,7 +269,10 @@ async def get_user_with_roles(id: int, db: AsyncSession = Depends(get_db)):
 
 @router.delete("/{user_id}/role/{role_id}", response_model=Any)
 async def remove_role_for_user(
-    user_id: int, role_id: int, db: AsyncSession = Depends(get_db)
+    user_id: int,
+    role_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
 ):
     try:
         user = await SqlRole.remove_user_from_role(db, user_id, role_id)

@@ -118,7 +118,7 @@ def init_app(config_file: str = "config.json"):
     from app.views.setting_types_view import router as setting_type_router
 
     server.include_router(
-        setting_type_router, prefix=api_prefix, tags=["setting_types"]
+        setting_type_router, prefix=api_prefix, tags=["setting-types"]
     )
 
     from app.views.settings_view import router as setting_router
@@ -128,10 +128,6 @@ def init_app(config_file: str = "config.json"):
     from app.views.documents_view import router as document_router
 
     server.include_router(document_router, prefix=api_prefix, tags=["documents"])
-
-    from app.views.doc_export_view import router as export_router
-
-    server.include_router(export_router, prefix=api_prefix, tags=["doc_export"])
 
     from app.views.websocket import router as websocket_router
 

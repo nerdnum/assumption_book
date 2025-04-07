@@ -66,6 +66,7 @@ class Component(AsyncAttrs, BaseEntity):
         level: int,
         sequence: int = None,
         description: str = None,
+        user_id: int = None,
     ) -> "Component":
 
         project = await SqlProject.get_project_by_id(db, project_id)
@@ -91,6 +92,8 @@ class Component(AsyncAttrs, BaseEntity):
             sequence=max_sequence,
             description=description,
             uuid=str(uuid4()),
+            created_by=user_id,
+            updated_by=user_id,
         )
         try:
             db.add(component)
@@ -158,6 +161,7 @@ class Component(AsyncAttrs, BaseEntity):
         level: int = None,
         parent_id: int = None,
         description: str = None,
+        user_id: int = None,
     ) -> "Component":
         component = await cls.get_by_id(db, component_id)
 
@@ -178,6 +182,9 @@ class Component(AsyncAttrs, BaseEntity):
 
         if sequence is not None:
             component.sequence = sequence
+
+        if user_id is not None:
+            component.updated_by = user_id
 
         try:
             await db.commit()

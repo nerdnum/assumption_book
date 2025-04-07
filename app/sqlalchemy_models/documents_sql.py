@@ -42,6 +42,7 @@ class Document(BaseEntity):
         html_content: str | None,
         json_content: dict | None,
         interface_id: int | None,
+        user_id: int | None = None,
     ) -> "Document":
         document = cls(
             project_id=project_id,
@@ -53,6 +54,8 @@ class Document(BaseEntity):
             context=context,
             uuid=str(uuid4()),
             interface_id=interface_id,
+            created_by=user_id,
+            updated_by=user_id,
         )
         try:
             db.add(document)
@@ -112,6 +115,7 @@ class Document(BaseEntity):
         html_content: str | None,
         json_content: dict | None,
         interface_id: int | None,
+        user_id: int | None = None,
     ) -> "Document":
         try:
             document = (
@@ -132,6 +136,8 @@ class Document(BaseEntity):
                 document.json_content = json_content
             if interface_id is not None:
                 document.interface_id = interface_id
+            if user_id is not None:
+                document.updated_by = user_id
             await db.commit()
             await db.refresh(document)
         except Exception as error:

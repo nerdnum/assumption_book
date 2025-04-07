@@ -180,8 +180,24 @@ async def get_current_user_with_roles(
     user: Annotated[SqlUser, Depends(get_current_user)],
     request: Request,
 ):
-    # print(request.url.path)
-    # print("get_current_user_with_roles")
+
+    user_projects = [project.id for project in user.projects]
+    project_id = request.query_params.get("project_id")
+    if project_id is None:
+        project_id = request.path_params.get("project_id")
+    if project_id is not None:
+        try:
+            check_id = int(project_id)
+            if check_id not in user_projects:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="User does not have access to this project",
+                )
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid project id",
+            )
     return user
 
 
@@ -242,7 +258,10 @@ async def verify_token(request: Request):
 
 
 @router.post("/refresh")
-async def get_fresh_access_token(token: Annotated[str, Depends(verify_token)] = None):
+async def get_fresh_access_token(
+    token: Annotated[str, Depends(verify_token)] = None,
+    current_user: Annotated[SqlUser, Depends(get_current_user)] = None,
+):
     return {"access_token": token, "accessToken": token}
 
 
@@ -303,7 +322,10 @@ async def set_password(
 
 
 @router.get("/items")
-async def read_items(token: Annotated[str, Depends(oauth2_scheme)]):
+async def read_items(
+    token: Annotated[str, Depends(oauth2_scheme)],
+    current_user: Annotated[SqlUser, Depends(get_current_user)] = None,
+):
     return {"token": token}
 
 
@@ -321,6 +343,7 @@ async def verify_email_token(token: Annotated[str, Depends(oauth2_scheme)]):
 async def get_password_token(
     id: int,
     db: AsyncSession = Depends(get_db),
+    current_user: Annotated[SqlUser, Depends(get_current_user)] = None,
 ):
     try:
         user = await SqlUser.get(db, id)

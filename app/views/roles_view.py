@@ -1,5 +1,5 @@
 # Standard libary imports
-from typing import Any
+from typing import Any, Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,19 +9,28 @@ from app.pydantic_models.role_model import Role, RoleCreate, RoleUpdate
 # RoleWithUsers
 # App imports
 from app.services.database import get_db
+from app.sqlalchemy_models.user_project_role_sql import User as SqlUser
 from app.sqlalchemy_models.user_project_role_sql import Role as SqlRole
+from app.views.auth_view import get_current_user_with_roles
 
 router = APIRouter(prefix="/roles", tags=["roles"])
 
 
 @router.get("", response_model=list[Role])
-async def get_all_roles(db: AsyncSession = Depends(get_db)):
+async def get_all_roles(
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
+):
     roles = await SqlRole.get_all(db)
     return roles
 
 
 @router.post("", response_model=Role, status_code=status.HTTP_201_CREATED)
-async def create_role(role: RoleCreate, db: AsyncSession = Depends(get_db)):
+async def create_role(
+    role: RoleCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
+):
     try:
         role_in_db = await SqlRole.create(
             db, role.name, role.description, role.is_system_role
@@ -32,7 +41,12 @@ async def create_role(role: RoleCreate, db: AsyncSession = Depends(get_db)):
 
 
 @router.put("/{id}", response_model=Role)
-async def update_role(id: int, role: RoleUpdate, db: AsyncSession = Depends(get_db)):
+async def update_role(
+    id: int,
+    role: RoleUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
+):
     try:
         role_in_db = await SqlRole.update(
             db, id, role.name, role.description, role.is_system_role
@@ -43,7 +57,11 @@ async def update_role(id: int, role: RoleUpdate, db: AsyncSession = Depends(get_
 
 
 @router.delete("/{id}", response_model=Any)
-async def delete_role(id: int, db: AsyncSession = Depends(get_db)):
+async def delete_role(
+    id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
+):
     try:
         await SqlRole.delete(db, id)
     except ValueError as error:
@@ -52,7 +70,11 @@ async def delete_role(id: int, db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/{id}", response_model=Role)
-async def get_role_by_id(id: int, db: AsyncSession = Depends(get_db)):
+async def get_role_by_id(
+    id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
+):
     try:
         role = await SqlRole.get(db, id)
     except ValueError as error:
@@ -61,7 +83,11 @@ async def get_role_by_id(id: int, db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/uuid/{uuid}", response_model=Role)
-async def get_role_by_uuid(uuid: str, db: AsyncSession = Depends(get_db)):
+async def get_role_by_uuid(
+    uuid: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
+):
     try:
         role = await SqlRole.get_role_by_uuid(db, uuid)
     except ValueError as error:
@@ -96,7 +122,10 @@ async def get_role_by_uuid(uuid: str, db: AsyncSession = Depends(get_db)):
 
 @router.delete("/{role_id}/user/{user_id}", response_model=Any)
 async def remove_user_from_role(
-    user_id: int, role_id: int, db: AsyncSession = Depends(get_db)
+    user_id: int,
+    role_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
 ):
     try:
         await SqlRole.remove_user_from_role(db, user_id, role_id)
