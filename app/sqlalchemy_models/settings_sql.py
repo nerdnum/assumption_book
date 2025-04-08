@@ -44,6 +44,7 @@ class Setting(BaseEntity):
         description: str | None,
         value: str,
         setting_type_id: int,
+        user_id: int | None = None,
     ) -> "Setting":
 
         setting = cls(
@@ -52,6 +53,8 @@ class Setting(BaseEntity):
             value=value,
             setting_type_id=setting_type_id,
             uuid=str(uuid4()),
+            created_by=user_id,
+            updated_by=user_id,
         )
 
         setting_type = await SettingType.get(db, setting_type_id)
@@ -106,6 +109,7 @@ class Setting(BaseEntity):
         description: str | None,
         value: str | None,
         setting_type_id: int | None,
+        user_id: int | None = None,
     ) -> "Setting":
         try:
 
@@ -127,6 +131,9 @@ class Setting(BaseEntity):
                 if setting_type is None:
                     raise ValueError("Setting type not found")
                 setting.setting_type_id = setting_type_id
+
+            if user_id is not None:
+                setting.updated_by = user_id
 
             try:
                 await db.commit()

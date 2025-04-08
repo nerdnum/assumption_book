@@ -38,7 +38,6 @@ test_config.json
 
 .coverage
 
-http*
 zz_backup
 app/static/document_images
 app/static/docx

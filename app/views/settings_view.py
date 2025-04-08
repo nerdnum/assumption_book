@@ -29,7 +29,9 @@ async def create_setting(
     current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
 ):
     try:
-        setting = await SqlSetting.create(db, **setting.model_dump())
+        setting = await SqlSetting.create(
+            db, **setting.model_dump(), user_id=current_user.id
+        )
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error))
     return setting
@@ -56,7 +58,9 @@ async def update_setting(
     current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
 ):
     try:
-        setting = await SqlSetting.update(db, id, **setting.model_dump())
+        setting = await SqlSetting.update(
+            db, id, **setting.model_dump(), user_id=current_user.id
+        )
     except ValueError as error:
         raise HTTPException(status_code=404, detail=str(error))
     return setting
