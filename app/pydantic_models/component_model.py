@@ -28,6 +28,7 @@ class ComponentBase(AsyncValidationModelMixin, CamelModel):
     title: TitleType
     description: Optional[str] = None
     level: Optional[IDType] = None
+    structure_code: Optional[str] = None
     sequence: Optional[IDType] = None
 
     async def check_for_duplicate_title_in_base(self, value: str):

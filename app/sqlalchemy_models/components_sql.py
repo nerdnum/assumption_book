@@ -19,6 +19,7 @@ class Component(AsyncAttrs, BaseEntity):
         Integer, ForeignKey("projects.id"), nullable=True
     )
     title: Mapped[str] = mapped_column(String, nullable=False)
+    structure_code: Mapped[str] = mapped_column(String, nullable=True)
     uuid: Mapped[str] = mapped_column(String, nullable=False)
     level: Mapped[int] = mapped_column(Integer, nullable=False)
     description: Mapped[str] = mapped_column(String)
@@ -64,6 +65,7 @@ class Component(AsyncAttrs, BaseEntity):
         parent_id: int,
         title: str,
         level: int,
+        structure_code: str = None,
         sequence: int = None,
         description: str = None,
         user_id: int = None,
@@ -89,6 +91,7 @@ class Component(AsyncAttrs, BaseEntity):
             parent_id=parent_id,
             title=title,
             level=level,
+            structure_code=structure_code,
             sequence=max_sequence,
             description=description,
             uuid=str(uuid4()),
@@ -159,6 +162,7 @@ class Component(AsyncAttrs, BaseEntity):
         project_id: int = None,
         sequence: int = None,
         level: int = None,
+        structure_code: str = None,
         parent_id: int = None,
         description: str = None,
         user_id: int = None,
@@ -173,6 +177,9 @@ class Component(AsyncAttrs, BaseEntity):
 
         if level is not None:
             component.level = level
+
+        if structure_code is not None:
+            component.structure_code = structure_code
 
         if parent_id is not None:
             component.parent_id = parent_id

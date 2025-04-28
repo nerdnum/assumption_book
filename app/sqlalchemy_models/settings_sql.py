@@ -65,7 +65,8 @@ class Setting(BaseEntity):
             db.add(setting)
             await db.commit()
             await db.refresh(setting)
-        except IntegrityError as error:
+
+        except Exception as error:
             await db.rollback()
             error_str = str(error)
             if (
@@ -77,14 +78,18 @@ class Setting(BaseEntity):
                 raise ValueError("Setting already exists")
             if (
                 error_str.find(
+                    'duplicate key value violates unique constraint "settings_setting_type_id_title_key"'
+                )
+                != -1
+            ):
+                raise ValueError("Setting already exists")
+            if (
+                error_str.find(
                     'new row for relation "settings" violates check constraint "title_length"'
                 )
                 != -1
             ):
                 raise ValueError("Title field cannot be empty")
-            raise
-        except Exception:
-            await db.rollback()
             raise
         return setting
 
@@ -135,23 +140,35 @@ class Setting(BaseEntity):
             if user_id is not None:
                 setting.updated_by = user_id
 
-            try:
-                await db.commit()
-                await db.refresh(setting)
-            except IntegrityError as error:
-                await db.rollback()
-                error_str = str(error)
-                if (
-                    error_str.find(
-                        'new row for relation "settings" violates check constraint "title_length"'
-                    )
-                    != -1
-                ):
-                    raise ValueError("Title field cannot be empty")
-                raise ValueError("Setting already exists")
+            await db.commit()
+            await db.refresh(setting)
+
         except NoResultFound:
             raise ValueError("Setting not found")
-        except Exception:
+        except Exception as error:
+            await db.rollback()
+            error_str = str(error)
+            if (
+                error_str.find(
+                    'duplicate key value violates unique constraint "settings_value_title_key"'
+                )
+                != -1
+            ):
+                raise ValueError("Setting already exists")
+            if (
+                error_str.find(
+                    'duplicate key value violates unique constraint "settings_setting_type_id_title_key"'
+                )
+                != -1
+            ):
+                raise ValueError("Setting already exists")
+            if (
+                error_str.find(
+                    'new row for relation "settings" violates check constraint "title_length"'
+                )
+                != -1
+            ):
+                raise ValueError("Title field cannot be empty")
             raise
         return setting
 

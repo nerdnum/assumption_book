@@ -35,7 +35,13 @@ class Token(CamelModel):
     refresh: bool
 
 
-class TokenResponse(CamelModel):
+class SnakeTokenResponse(BaseModel):
+    access_token: str
+    token_type: str
+    refresh_token: str | None = None
+
+
+class CamelTokenResponse(CamelModel):
     access_token: str
     token_type: str
     refresh_token: str | None = None
@@ -268,7 +274,9 @@ async def get_fresh_access_token(
 @router.post("/token")
 async def login(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-) -> TokenResponse:
+    request: Request,
+) -> CamelTokenResponse | SnakeTokenResponse:
+    requester = request.headers.get("origin")
     try:
         user = await authenticate_user_by_email(
             form_data.username.lower(), form_data.password
@@ -291,7 +299,11 @@ async def login(
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    return TokenResponse(
+    if requester == "http://localhost:8000":
+        return SnakeTokenResponse(
+            access_token=access_token, token_type="Bearer", refresh_token=refresh_token
+        )
+    return CamelTokenResponse(
         access_token=access_token, token_type="Bearer", refresh_token=refresh_token
     )
 
@@ -337,7 +349,7 @@ async def verify_email_token(token: Annotated[str, Depends(oauth2_scheme)]):
 
 @router.get(
     "/password-token/{id:int}",
-    response_model=TokenResponse,
+    response_model=CamelTokenResponse,
     response_model_exclude_unset=True,
 )
 async def get_password_token(

@@ -438,7 +438,9 @@ class Project(BaseEntity):
             description=description,
             project_manager=project_manager,
             logo_url=logo_url,
-            uuid=str(uuid4(), created_by=user_id, updated_by=user_id),
+            uuid=str(uuid4()),
+            created_by=user_id,
+            updated_by=user_id,
         )
 
         try:
