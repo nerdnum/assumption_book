@@ -6,7 +6,7 @@ GET http://localhost:8000/api/v1/projects/aman/components
 
 
 ###
-GET http://localhost:8000/api/v1/projects/7/components/60/descendants
+GET http://localhost:8000/api/v1/projects/7/components/60/children
 
 
 ###

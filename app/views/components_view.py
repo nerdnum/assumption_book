@@ -15,7 +15,7 @@ from app.pydantic_models.component_model import (
     ComponentCreate,
     ComponentDelete,
     ComponentUpdate,
-    ComponentWithDescendants,
+    ComponentWithChildren,
 )
 from app.services.database import get_db
 from app.services.utils import pretty_print
@@ -31,14 +31,14 @@ router = APIRouter(prefix="/components", tags=["components"])
 #     return components
 
 
-async def get_descendants(
+async def get_children(
     db: AsyncSession,
     component_id: int,
     recursion_level: int = 10,
     level: int = 0,
     current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
 ) -> list[dict]:
-    descendants = []
+    children = []
     if level < recursion_level:
         level += 1
         components = (
@@ -52,36 +52,36 @@ async def get_descendants(
         )
         for component in components:
             component_dict = Component.model_validate(component).model_dump()
-            component_dict["descendants"] = await get_descendants(
+            component_dict["children"] = await get_children(
                 db, component.id, recursion_level, level
             )
-            descendants.append(component_dict)
+            children.append(component_dict)
     else:
         raise ValueError("Recursion level of 10 exceeded")
-    return descendants
+    return children
 
 
 async def get_component_hierarchy(
     component_id: int,
     levels: int = 1,
     db: AsyncSession = Depends(get_db),
-) -> list[ComponentWithDescendants]:
+) -> list[ComponentWithChildren]:
     component = await SqlComponent.get_by_id(db, component_id)
     component_dict = Component.model_validate(component).model_dump()
-    component_dict["descendants"] = await get_descendants(db, component.id, levels, 0)
+    component_dict["children"] = await get_children(db, component.id, levels, 0)
     return component_dict
 
 
 async def get_root_component_hierarchy(
     project_id: int,
     db: AsyncSession = Depends(get_db),
-) -> list[ComponentWithDescendants]:
+) -> list[ComponentWithChildren]:
     component_list = []
     root_components = await SqlComponent.get_root_components(db, project_id)
     for component in root_components:
         component_dict = Component.model_validate(component).model_dump()
-        descendants = await get_descendants(db, component.id, 10, 0)
-        component_dict["descendants"] = descendants
+        children = await get_children(db, component.id, 10, 0)
+        component_dict["children"] = children
         component_list.append(component_dict)
     return component_list
 
@@ -108,29 +108,29 @@ async def root_components(
     return root_components
 
 
-@router.get("/hierarchy", response_model=list[ComponentWithDescendants])
+@router.get("/hierarchy", response_model=list[ComponentWithChildren])
 async def get_hierarchy(
     project_id: int,
     db: AsyncSession = Depends(get_db),
     current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
-) -> list[ComponentWithDescendants]:
+) -> list[ComponentWithChildren]:
     # Ok as on 2024-06-25 11:53
     hierarchy = await get_root_component_hierarchy(project_id, db)
     return hierarchy
 
 
-@router.get("/{component_id:int}/descendants", response_model=list[Component])
-async def get_component_by_id_with_descendants(
+@router.get("/{component_id:int}/children", response_model=list[Component])
+async def get_component_by_id_with_children(
     project_id: int,
     component_id: int,
     db: AsyncSession = Depends(get_db),
     current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
 ) -> list[Component]:
     try:
-        descendants = await get_descendants(db, component_id)
+        children = await get_children(db, component_id)
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error))
-    return descendants
+    return children
 
 
 @router.get("/{component_id:int}/html", response_model=str)

@@ -107,7 +107,7 @@ class ComponentCreate(ComponentBase):
                         await session.execute(
                             select(SqlComponent)
                             .where(SqlComponent.id == self.parent_id)
-                            .options(selectinload(SqlComponent.descendants))
+                            .options(selectinload(SqlComponent.children))
                         )
                     )
                     .scalars()
@@ -117,7 +117,7 @@ class ComponentCreate(ComponentBase):
                     raise ValueError("Parent component does not exist")
                 if self.level == parent.level:
                     raise ValueError(
-                        "A descendant component cannot be on the same level as the parent"
+                        "A child component cannot be on the same level as the parent"
                     )
                 if self.level != parent.level + 1:
                     raise ValueError(
@@ -196,7 +196,7 @@ class ComponentUpdate(ComponentBase):
                         await session.execute(
                             select(SqlComponent)
                             .where(SqlComponent.id == self.parent_id)
-                            .options(selectinload(SqlComponent.descendants))
+                            .options(selectinload(SqlComponent.children))
                         )
                     )
                     .scalars()
@@ -206,7 +206,7 @@ class ComponentUpdate(ComponentBase):
                     raise ValueError("Parent component does not exist")
                 if self.level == parent.level:
                     raise ValueError(
-                        "A descendant component cannot be on the same level as the parent"
+                        "A child component cannot be on the same level as the parent"
                     )
                 if self.level != parent.level + 1:
                     raise ValueError(
@@ -263,11 +263,11 @@ class Component(ComponentBase):
         from_attributes = True
 
 
-class ComponentWithDescendants(ComponentBase):
+class ComponentWithChildren(ComponentBase):
     id: int
     uuid: str
 
-    descendants: Optional[list["ComponentWithDescendants"]] = []
+    children: Optional[list["ComponentWithChildren"]] = []
 
     class Config:
         from_attributes = True
@@ -283,10 +283,10 @@ class ComponentDelete(Component):
                     await session.execute(
                         select(SqlComponent)
                         .where(SqlComponent.id == self.id)
-                        .options(selectinload(SqlComponent.descendants))
+                        .options(selectinload(SqlComponent.children))
                     )
                 ).scalar_one()
-                if len(component.descendants) > 0:
-                    raise ValueError("Cannot delete a component with descendants")
+                if len(component.children) > 0:
+                    raise ValueError("Cannot delete a component with children")
             except Exception as error:
                 raise error

@@ -26,7 +26,7 @@ class Component(AsyncAttrs, BaseEntity):
     sequence: Mapped[int] = mapped_column(Integer, nullable=False)
     # is_template: Mapped[bool] = mapped_column(
     #     Boolean, nullable=False, default=False)
-    descendants: Mapped[list["Component"]] = relationship("Component")
+    children: Mapped[list["Component"]] = relationship("Component")
 
     # This check were moved to Pydantic Validations
     # __table_args__ = (
@@ -126,18 +126,18 @@ class Component(AsyncAttrs, BaseEntity):
 
     # 2024-06-30 although I am convinced that these worked before,
     # it does not anymore. It runs into a recursion error:
-    # the first level of descendants are loaded, and can be accessed.
-    # When you try to access a second level of descendants Python/SqlAlchemy
-    # tries to load the descendants asynchronously, but out of context.
-    # I solved the issue by create a dictionary and loading the descendants
+    # the first level of children are loaded, and can be accessed.
+    # When you try to access a second level of children Python/SqlAlchemy
+    # tries to load the children asynchronously, but out of context.
+    # I solved the issue by create a dictionary and loading the children
     # into the dictionary recursively, then passing the dictionary to the
-    # Pydantic model "ComponentWithDescendants".
+    # Pydantic model "ComponentWithChildren".
 
     # @ classmethod
-    # async def get_with_descendants_by_id(cls, db, component_id: int) -> "Component":
+    # async def get_with_children_by_id(cls, db, component_id: int) -> "Component":
     #     try:
     #         component = (await db.execute(select(cls).where(cls.id == component_id)
-    #                                       .options(selectinload(cls.descendants, recursion_depth=0))
+    #                                       .options(selectinload(cls.children, recursion_depth=0))
     #                                       )).scalars().first()
     #         if component is None:
     #             raise NoResultFound
@@ -218,9 +218,9 @@ class Component(AsyncAttrs, BaseEntity):
         return component
 
     @classmethod
-    async def get_descendants(cls, db, component_id: int) -> list["Component"]:
+    async def get_children(cls, db, component_id: int) -> list["Component"]:
         try:
-            descendants = (
+            children = (
                 (
                     await db.execute(
                         select(cls)
@@ -233,7 +233,7 @@ class Component(AsyncAttrs, BaseEntity):
             )
         except NoResultFound:
             raise ValueError("component not found")
-        return descendants
+        return children
 
     @classmethod
     async def get_html_by_id(cls, db, component_id: int) -> str:
@@ -274,7 +274,7 @@ class Component(AsyncAttrs, BaseEntity):
     #                                         .order_by(cls.level, cls.sequence))).scalars().all()
 
     #     for component in first_level:
-    #         component.descendants = await cls.get_descendants(db, component.id)
+    #         component.children = await cls.get_children(db, component.id)
 
     #     return first_level
 
