@@ -403,6 +403,7 @@ class Project(BaseEntity):
     description: Mapped[str] = mapped_column(String(255), nullable=True)
     project_manager: Mapped[str] = mapped_column(String(100), nullable=True)
     logo_url: Mapped[str] = mapped_column(String(255), nullable=True)
+    image_url: Mapped[str] = mapped_column(String(255), nullable=True)
     users: Mapped[List[User]] = relationship(
         secondary=UserProject.__table__,
         lazy="selectin",
@@ -427,10 +428,11 @@ class Project(BaseEntity):
         cls,
         db: AsyncSession,
         title: str,
-        description: str | None,
-        project_manager: str | None,
-        logo_url: str | None,
         user_id: int,
+        description: str | None = None,
+        project_manager: str | None = None,
+        logo_url: str | None = None,
+        image_url: str | None = None,
     ) -> "Project":
 
         project = cls(
@@ -438,6 +440,7 @@ class Project(BaseEntity):
             description=description,
             project_manager=project_manager,
             logo_url=logo_url,
+            image_url=image_url,
             uuid=str(uuid4()),
             created_by=user_id,
             updated_by=user_id,
@@ -449,8 +452,15 @@ class Project(BaseEntity):
             await db.refresh(project)
         except IntegrityError as error:
             await db.rollback()
+            if (
+                'duplicate key value violates unique constraint "projects_title_key"'
+                in str(error)
+            ):
+                # This is a specific error for duplicate project titles
+                raise ValueError(
+                    "A project with this title already exists. You may not have access."
+                )
             raise error
-            # raise ValueError("Project with this title already exists")
         return project
 
     @classmethod
@@ -473,6 +483,7 @@ class Project(BaseEntity):
         description: str | None,
         project_manager: str | None,
         logo_url: str | None,
+        image_url: str | None,
         user_id: int,
     ) -> "Project":
         try:
@@ -481,10 +492,12 @@ class Project(BaseEntity):
                 project.title = title
             if description is not None:
                 project.description = description
-            if logo_url is not None:
-                project.logo_url = logo_url
             if project_manager is not None:
                 project.project_manager = project_manager
+            if logo_url is not None:
+                project.logo_url = logo_url
+            if image_url is not None:
+                project.image_url = image_url
             project.updated_by = user_id
             try:
                 await db.commit()
@@ -505,10 +518,11 @@ class Project(BaseEntity):
         description: str | None,
         project_manager: str | None,
         logo_url: str | None,
+        image_url: str | None,
         user_id: int,
     ) -> "Project":
         return await cls.update_project(
-            db, id, title, description, project_manager, logo_url, user_id
+            db, id, title, description, project_manager, logo_url, image_url, user_id
         )
 
     @classmethod

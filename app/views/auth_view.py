@@ -35,6 +35,11 @@ class Token(CamelModel):
     refresh: bool
 
 
+# TODO: When using the swagger docs interface, the frontend cannot extract the auth token
+# The backend needs to detect that it is the swagger interface and provide the correct
+# response
+
+
 class SnakeTokenResponse(BaseModel):
     access_token: str
     token_type: str

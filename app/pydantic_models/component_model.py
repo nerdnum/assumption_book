@@ -77,7 +77,7 @@ class ComponentCreate(ComponentBase):
 
     @model_validator(mode="before")
     @classmethod
-    def validate_model_before(cls, data: any):
+    def validate_model_before(cls, data: dict):
         # NB: NB use camelCase for the keys in the data dictionary
         if data.get("parentId") is not None:
             if data.get("level") == 0:

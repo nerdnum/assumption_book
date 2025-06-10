@@ -173,7 +173,7 @@ class Setting(BaseEntity):
         return setting
 
     @classmethod
-    async def delete(cls, db: AsyncSession, id: int) -> None:
+    async def delete(cls, db: AsyncSession, id: int) -> dict:
         try:
             setting = await db.get(cls, id)
             if setting is None:
@@ -184,4 +184,4 @@ class Setting(BaseEntity):
             raise ValueError("Setting not found")
         except Exception:
             raise
-        return {"detail": "Setting deleted"}
+        return {"id": id, "detail": "Setting deleted"}

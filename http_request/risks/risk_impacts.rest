@@ -1,0 +1,28 @@
+###
+GET HTTP://localhost:8000/api/v1/risk-impacts
+
+
+###
+GET HTTP://localhost:8000/api/v1/risk-types
+
+
+###
+POST HTTP://localhost:8000/api/v1/risk-impacts
+Content-Type: application/json
+
+{
+  "risk_type_id": 1,
+  "description": "Short term illness to one or more person",
+  "severity": 1
+}
+
+###
+PUT HTTP://localhost:8000/api/v1/risk-impacts/2
+Content-Type: application/json
+
+{
+  "severity": 1
+}
+
+###
+DELETE HTTP://localhost:8000/api/v1/risk-impacts/2

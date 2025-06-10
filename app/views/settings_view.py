@@ -22,6 +22,15 @@ async def get_settings(
     return settings
 
 
+# const settingToSave = {
+#       id: setting.id,
+#       settingTypeId: setting.settingTypeId,
+#       title: setting.title,
+#       description: setting.title,
+#       value: setting.value,
+#     };
+
+
 @router.post("", response_model=Setting, status_code=status.HTTP_201_CREATED)
 async def create_setting(
     setting: SettingCreate,

@@ -1,0 +1,43 @@
+###
+GET HTTP://localhost:8000/api/v1/risks
+
+
+###
+POST HTTP://localhost:8000/api/v1/risks
+Content-Type: application/json
+
+{
+  "project_id": 11,
+  "component_id": 75,
+  "risk_type_id": 1,
+  "description": "Some employees may be absent from work due to drunkenness after payday."
+}
+
+
+
+###
+POST HTTP://localhost:8000/api/v1/risks
+Content-Type: application/json
+
+{
+  "project_id": 11,
+  "component_id": 75,
+  "risk_type_id": 1,
+  "risk_owner_id": 17,
+  "description": "Some employees may be absent from work due to drunkenness after payday.",
+  "cause": "Employees may be tempted to drink excessively after receiving their pay.",
+  "impact": "The absence of employees may lead to delays in project timelines and increased costs.",
+  "severity": 2,
+  "probability": 5,
+  "controls": "Adjust the project schedule to account for potential absences.",
+  "control_owner_id": 17
+}
+
+
+###
+PUT HTTP://localhost:8000/api/v1/risks/1
+Content-Type: application/json
+
+{
+  "project_id": 100
+}

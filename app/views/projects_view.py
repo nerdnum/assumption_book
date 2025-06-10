@@ -16,11 +16,12 @@ from app.pydantic_models.project_model import (
 # App imports
 from app.pydantic_models.role_model import Role
 from app.pydantic_models.user_model import ProjectWithUsers
-from app.pydantic_models.project_model import ProjectBasicInfo
+from app.pydantic_models.project_model import Project
 from app.services.create_docx import create_project_docx
 from app.services.database import get_db
 from app.sqlalchemy_models.user_project_role_sql import Project as SqlProject
 from app.sqlalchemy_models.user_project_role_sql import User as SqlUser
+from app.sqlalchemy_models.user_project_role_sql import UserProject as SqlUserProject
 from app.views.auth_view import get_current_user_with_roles
 
 # App imports
@@ -35,7 +36,7 @@ async def get_current_user_projects(
     return current_user.projects
 
 
-@router.get("", response_model=list[ProjectBasicInfo])
+@router.get("", response_model=list[Project])
 async def get_all_projects(
     db: AsyncSession = Depends(get_db),
     current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
@@ -54,6 +55,19 @@ async def create_project(
         project = await SqlProject.create(
             db, **project.model_dump(), user_id=current_user.id
         )
+        await db.commit()
+        await db.refresh(project)
+        association = SqlUserProject(
+            user_id=current_user.id,
+            project_id=project.id,
+            created_by=current_user.id,
+            updated_by=current_user.id,
+        )
+        db.add(association)
+        await db.commit()
+        await db.refresh(association)
+        await db.refresh(project)
+
     except ValueError as error:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error))
     return project
@@ -109,7 +123,6 @@ async def get_project_users(
     return project
 
 
-# TODO - users should be able to see only their projects
 @router.put(
     "/{id:int}",
     response_model=Project,

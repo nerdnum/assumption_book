@@ -50,4 +50,8 @@ t_e_s_t_backup/
 pytest.ini
 play_with_components.py
 *.xlsx
-Visual AMAN*
+Visual
+AMAN*
+LiveDB.backup
+Visual*
+RiskManagement*.md

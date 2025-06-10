@@ -5,15 +5,12 @@ from pydantic import model_validator
 
 
 class SettingTypeBase(CamelModel):
-    title: str
+    title: str | None = None
     description: str | None = None
     default_text: str | None = None
 
 
 class SettingTypeUpdate(SettingTypeBase):
-    title: Optional[str] = None
-    description: Optional[str] = None
-    default_text: Optional[str] = None
 
     @model_validator(mode="before")
     @classmethod
@@ -30,7 +27,7 @@ class SettingTypeUpdate(SettingTypeBase):
 
 
 class SettingTypeCreate(SettingTypeBase):
-    pass
+    title: str
 
 
 class SettingType(SettingTypeBase):

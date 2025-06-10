@@ -6,30 +6,22 @@ from app.pydantic_models.role_model import Role
 
 
 class ProjectBase(CamelModel):
-    title: str
+    title: str | None
     description: str | None = None
     project_manager: str | None = None
     logo_url: str | None = None
+    image_url: str | None = None
 
 
-class ProjectBasicInfo(CamelModel):
-    id: int
-    title: str
-    description: str | None = None
-
-
-class ProjectUpdate(CamelModel):
-    title: Optional[str] = None
-    description: Optional[str] = None
-    project_manager: Optional[str] = None
-    logo_url: Optional[str] = None
+class ProjectUpdate(ProjectBase):
+    title: str | None = None
 
 
 # TODO - Add pydantic validation and error checking for the class
 
 
 class ProjectCreate(ProjectBase):
-    pass
+    title: str
 
 
 class Project(ProjectBase):
@@ -38,6 +30,13 @@ class Project(ProjectBase):
 
     class Config:
         from_attributes = True
+
+
+class ProjectBasicInfo(CamelModel):
+    id: int
+    uuid: str
+    title: str
+    description: str | None = None
 
 
 class ProjectWithRoles(Project):

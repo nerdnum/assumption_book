@@ -1,0 +1,28 @@
+###
+GET http://localhost:8000/api/v1/risk-probabilities
+
+
+###
+POST http://localhost:8000/api/v1/risk-probabilities
+Content-Type: application/json
+
+{
+    "probability": 1,
+    "percentage_min": 0.0,
+    "percentage_max": 6.00,
+    "frequency": 1E-12,
+    "explanation": "Not likely to occur in 80 year period",
+    "experience": "Has occurred once or twice in industry"
+}
+
+
+###
+PUT http://localhost:8000/api/v1/risk-probabilities/1
+Content-Type: application/json
+
+{
+    "percentage_max": 5.0
+}
+
+###
+DELETE http://localhost:8000/api/v1/risk-probabilities/1

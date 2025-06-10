@@ -94,13 +94,11 @@ def init_app(config_file: str = "config.json"):
         prefix="/{project_id:int}",
         tags=["components"],
     )
-
     server.mount(
         api_prefix + "/static",
         StaticFiles(directory="app/static", html=True),
         name="static",
     )
-
     server.include_router(project_router, prefix=api_prefix, tags=["projects"])
 
     from app.views.auth_view import router as auth_router
@@ -132,5 +130,23 @@ def init_app(config_file: str = "config.json"):
     from app.views.websocket import router as websocket_router
 
     server.include_router(websocket_router, prefix=api_prefix, tags=["doc_export"])
+
+    from app.views.risk_types_view import router as risk_type_router
+
+    server.include_router(risk_type_router, prefix=api_prefix, tags=["risk-types"])
+
+    from app.views.risk_impacts_view import router as risk_impact_router
+
+    server.include_router(risk_impact_router, prefix=api_prefix, tags=["risk-impacts"])
+
+    from app.views.risk_probability_view import router as risk_probability_router
+
+    server.include_router(
+        risk_probability_router, prefix=api_prefix, tags=["risk-probabilities"]
+    )
+
+    from app.views.risks_view import router as risk_router
+
+    server.include_router(risk_router, prefix=api_prefix, tags=["risks"])
 
     return server

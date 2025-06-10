@@ -122,7 +122,7 @@ class SettingType(BaseEntity):
         return setting_type
 
     @classmethod
-    async def delete(cls, db: AsyncSession, id: int) -> None:
+    async def delete(cls, db: AsyncSession, id: int) -> dict:
         try:
             setting_type = await db.get(cls, id)
             if setting_type is None:

@@ -15,11 +15,11 @@ Content-Type: application/json
 }
 
 ###
-GET http://localhost:8000/api/v1/projects/9
+GET http://localhost:8000/api/v1/projects/1
 
 
 ###
-GET http://localhost:8000/api/v1/projects/8/components
+GET http://localhost:8000/api/v1/projects/1/components
 
 
 ###
@@ -27,15 +27,12 @@ PUT http://localhost:8000/api/v1/projects/1
 Content-Type: application/json
 
 {
-    "description": "A very late update 2024-06-25"
+    "logo_url": "http://localhost:8000/api/v1/static/project_logos/Flag_of_Mauritania.svg"
 }
 
 ###
-DELETE http://localhost:8000/api/v1/projects/1
+DELETE http://localhost:8000/api/v1/projects/3
 
-
-###
-GET http://localhost:8000/api/v1/projects/aman
 
 ###
 GET http://localhost:8000/api/v1/projects/framework

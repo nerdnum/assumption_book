@@ -1,0 +1,24 @@
+###
+GET http://localhost:8000/api/v1/risk-types
+
+
+###
+POST http://localhost:8000/api/v1/risk-types
+Content-Type: application/json
+
+{
+  "title": "Healy and Safety",
+  "abbreviation": "HS",
+  "description": "Health and Safety risks"
+}
+
+###
+PUT http://localhost:8000/api/v1/risk-types/1
+Content-Type: application/json
+
+{
+  "description": "Health and safety risks"
+}
+
+###
+DELETE http://localhost:8000/api/v1/risk-types/5
