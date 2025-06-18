@@ -65,10 +65,10 @@ class Component(AsyncAttrs, BaseEntity):
         parent_id: int,
         title: str,
         level: int,
-        structure_code: str = None,
-        sequence: int = None,
-        description: str = None,
-        user_id: int = None,
+        structure_code: str | None = None,
+        sequence: int | None = None,
+        description: str | None = None,
+        user_id: int | None = None,
     ) -> "Component":
 
         project = await SqlProject.get_project_by_id(db, project_id)
@@ -243,9 +243,7 @@ class Component(AsyncAttrs, BaseEntity):
             if component is None:
                 raise ValueError("Component not found")
 
-            documents = await Document.get_by_project_and_component_ids(
-                db, component.project_id, component.id
-            )
+            documents = await Document.get_by_component_id(db, component.id)
             component_html = f"<h1>{component.title}</h1>"
             for document in documents:
                 component_html += await Document.get_html_by_document_id(

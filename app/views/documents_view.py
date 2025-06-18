@@ -44,9 +44,7 @@ async def get_documents_count(
         component = await SqlCompoment.get_by_id(db, component_id)
         if component.project_id != project_id:
             raise ValueError("Component not found")
-        documents = await SqlDocument.get_by_project_and_component_ids(
-            db, project_id, component_id
-        )
+        documents = await SqlDocument.get_by_component_id(db, component_id)
     except NoResultFound:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
@@ -65,25 +63,18 @@ async def get_documents_count(
 
 
 @router.get("", response_model=list[Document], response_model_exclude_unset=True)
-async def get_documents_by_project_and_component_ids(
-    project_id: int,
+async def get_documents_by_component_id(
     component_id: int,
     db: AsyncSession = Depends(get_db),
     current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
 ):
     try:
-        # check if project exists
-        await SqlProject.get_project_by_id(db, project_id)
         # check if component exists
-        component = await SqlCompoment.get_by_id(db, component_id)
-        if component.project_id != project_id:
-            raise ValueError("Component not found")
-        documents = await SqlDocument.get_by_project_and_component_ids(
-            db, project_id, component_id
-        )
+        await SqlCompoment.get_by_id(db, component_id)
+        documents = await SqlDocument.get_by_component_id(db, component_id)
     except NoResultFound:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Component not found"
         )
     except ValueError as error:
         if str(error).find("not found"):

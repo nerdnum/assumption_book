@@ -74,6 +74,8 @@ class ComponentBase(AsyncValidationModelMixin, CamelModel):
 
 class ComponentCreate(ComponentBase):
     level: IDType
+    copied_id: Optional[IDType] = None
+    copy_documents: Optional[bool] = None
 
     @model_validator(mode="before")
     @classmethod
@@ -90,10 +92,13 @@ class ComponentCreate(ComponentBase):
     #         raise ValueError("model validator A component at levels 1 or higher must have a parent")
     #     return self
 
-    @async_field_validator("title")
-    async def check_for_duplicate_title_in_create(self, value: str):
-        await self.check_for_duplicate_title_in_base(value)
-        await self.check_for_duplicate_title_for_parent(value)
+    ## The following validators are commented out because copying components
+    ## from one project to another is can become messy if some components are copied
+    ## while others are not because they have duplicate titles.
+    # @async_field_validator("title")
+    # async def check_for_duplicate_title_in_create(self, value: str):
+    #     await self.check_for_duplicate_title_in_base(value)
+    #     await self.check_for_duplicate_title_for_parent(value)
 
     @async_field_validator("parent_id")
     async def validate_component_is_unique_for_parent_id(self, value: int):
@@ -160,32 +165,35 @@ class ComponentUpdate(ComponentBase):
     title: Optional[TitleType] = None
     description: Optional[str] = None
 
-    @async_field_validator("title")
-    async def validate_component_title_is_unique_for_parent_id(self, value: int):
-        async with sessionmanager.session() as session:
-            async with sessionmanager.session() as session:
-                component = (
-                    (
-                        await session.execute(
-                            select(SqlComponent)
-                            .where(SqlComponent.id != self.id)
-                            .where(SqlComponent.title == value)
-                            .where(SqlComponent.project_id == self.project_id)
-                            .where(SqlComponent.parent_id == self.parent_id)
-                        )
-                    )
-                    .scalars()
-                    .first()
-                )
-                if component is not None:
-                    if self.parent_id is None:
-                        raise ValueError(
-                            f"A level 0 component with title '{self.title}' already exists for this project"
-                        )
-                    else:
-                        raise ValueError(
-                            f"A component with title '{self.title}' already exists for the parent component"
-                        )
+    ## The following validators are commented out because copying components
+    ## from one project to another is can become messy if some components are copied
+    ## while others are not because they have duplicate titles.
+    # @async_field_validator("title")
+    # async def validate_component_title_is_unique_for_parent_id(self, value: int):
+    #     async with sessionmanager.session() as session:
+    #         async with sessionmanager.session() as session:
+    #             component = (
+    #                 (
+    #                     await session.execute(
+    #                         select(SqlComponent)
+    #                         .where(SqlComponent.id != self.id)
+    #                         .where(SqlComponent.title == value)
+    #                         .where(SqlComponent.project_id == self.project_id)
+    #                         .where(SqlComponent.parent_id == self.parent_id)
+    #                     )
+    #                 )
+    #                 .scalars()
+    #                 .first()
+    #             )
+    #             if component is not None:
+    #                 if self.parent_id is None:
+    #                     raise ValueError(
+    #                         f"A level 0 component with title '{self.title}' already exists for this project"
+    #                     )
+    #                 else:
+    #                     raise ValueError(
+    #                         f"A component with title '{self.title}' already exists for the parent component"
+    #                     )
 
     @async_field_validator("parent_id")
     async def validate_component_is_unique_for_parent_id(self, value: int):

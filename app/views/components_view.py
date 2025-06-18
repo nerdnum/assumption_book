@@ -5,6 +5,8 @@ from pydantic_async_validation.fastapi import ensure_request_validation_errors
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Annotated
+from copy import copy as shallow_copy
+from uuid import uuid4
 
 
 from app.views.auth_view import get_current_user_with_roles
@@ -17,9 +19,11 @@ from app.pydantic_models.component_model import (
     ComponentUpdate,
     ComponentWithChildren,
 )
-from app.services.database import get_db
+from app.pydantic_models.document_model import DocumentCreate
+from app.services.database import get_db, sessionmanager
 from app.services.utils import pretty_print
 from app.sqlalchemy_models.components_sql import Component as SqlComponent
+from app.sqlalchemy_models.documents_sql import Document as SqlDocument
 
 
 router = APIRouter(prefix="/components", tags=["components"])
@@ -168,6 +172,42 @@ async def get_component(
     return component
 
 
+async def do_copy_documents(
+    copied_id: int,
+    component_id: int,
+    project_id: int,
+    user_id: int,
+) -> None:
+    print(
+        f"Copying documents from component {copied_id} to {component_id}, project {project_id}, user {user_id}"
+    )
+    async with sessionmanager.session() as db:
+        original_documents = await SqlDocument.get_by_component_id(db, copied_id)
+        print(
+            f"Found {len(original_documents)} documents to copy from component {copied_id}"
+        )
+        # try:
+        if original_documents:
+            for document in original_documents:
+                print(f"Copying document {document.id}")
+                new_document_dict = {
+                    "project_id": project_id,
+                    "component_id": component_id,
+                    "title": document.title,
+                    "sequence": document.sequence,
+                    "context": document.context,
+                    "html_content": document.html_content,
+                    "json_content": document.json_content,
+                    "interface_id": document.interface_id,
+                    "user_id": user_id,
+                }
+                async with sessionmanager.session() as db:
+                    document = await SqlDocument.create(db, **new_document_dict)
+        # except Exception as error:
+        #     print("Error copying documents:", error)
+        #     raise ValueError("Error copying documents")
+
+
 @router.post(
     "/{parent_id:int}", response_model=Component, status_code=status.HTTP_201_CREATED
 )
@@ -196,11 +236,19 @@ async def create_component_by_parent_id(
             raise ValueError("Parent ID in json body does not match parent ID in URL")
         else:
             component.parent_id = parent_id
-        component.created_by = current_user.id
-        component.updated_by = current_user.id
         with ensure_request_validation_errors("body"):
             await component.model_async_validate()
-        component = await SqlComponent.create(db, **component.model_dump())
+        component_dict = component.model_dump()
+        copied_id = component_dict.pop("copied_id", None)
+        copy_documents = component_dict.pop("copy_documents", False)
+        component = await SqlComponent.create(
+            db, **component_dict, user_id=current_user.id
+        )
+        if copied_id is not None and copy_documents:
+            await do_copy_documents(
+                copied_id, component.id, project_id, current_user.id
+            )
+
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error))
     return component
@@ -220,9 +268,18 @@ async def create_component(
             raise ValueError("Project ID in json body does not match project ID in URL")
         with ensure_request_validation_errors("body"):
             await component.model_async_validate()
+        component_dict = component.model_dump()
+
+        copied_id = component_dict.pop("copied_id", None)
+        copy_documents = component_dict.pop("copy_documents", False)
         component = await SqlComponent.create(
-            db, **component.model_dump(), user_id=current_user.id
+            db, **component_dict, user_id=current_user.id
         )
+        if copied_id is not None and copy_documents:
+            await do_copy_documents(
+                copied_id, component.id, project_id, current_user.id
+            )
+
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error))
     return component
