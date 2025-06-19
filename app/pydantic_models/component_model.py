@@ -298,3 +298,10 @@ class ComponentDelete(Component):
                     raise ValueError("Cannot delete a component with children")
             except Exception as error:
                 raise error
+
+
+class ComponentCopyRecord(CamelModel):
+    from_id: int
+    to_id: int
+    project_to_id: int
+    do_copy_documents: bool = True

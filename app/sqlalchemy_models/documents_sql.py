@@ -5,7 +5,7 @@ from sqlalchemy import ForeignKey, Integer, String, or_, select
 from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, make_transient
 
 from app.services.database import BaseEntity
 
@@ -24,6 +24,8 @@ class Document(BaseEntity):
     html_content: Mapped[str] = mapped_column(String, nullable=True)
     json_content: Mapped[JSON] = mapped_column(JSON, nullable=True)
     interface_id: Mapped[int] = mapped_column(Integer, nullable=True)
+    origin: Mapped[JSON] = mapped_column(JSON, nullable=True)
+    historic_id: Mapped[int] = mapped_column(Integer, nullable=True)
 
     @classmethod
     async def get_all(cls, db: AsyncSession) -> list["Document"]:
@@ -43,6 +45,7 @@ class Document(BaseEntity):
         json_content: dict | None,
         interface_id: int | None,
         user_id: int | None = None,
+        origin: dict | None = None,
     ) -> "Document":
         document = cls(
             project_id=project_id,
@@ -56,6 +59,7 @@ class Document(BaseEntity):
             interface_id=interface_id,
             created_by=user_id,
             updated_by=user_id,
+            origin=origin,
         )
         try:
             db.add(document)
@@ -68,14 +72,14 @@ class Document(BaseEntity):
         return document
 
     @classmethod
-    async def get_by_project_and_component_ids(
-        cls, db: AsyncSession, project_id: int, component_id: int
+    async def get_by_component_id(
+        cls, db: AsyncSession, component_id: int
     ) -> list["Document"]:
         documents = (
             (
                 await db.execute(
                     select(cls)
-                    .filter(cls.project_id == project_id)
+                    .where(cls.historic_id == None)
                     .filter(
                         or_(
                             cls.component_id == component_id,
@@ -105,6 +109,32 @@ class Document(BaseEntity):
         return document
 
     @classmethod
+    async def get_document_history_by_id(
+        cls,
+        db: AsyncSession,
+        document_id: int,
+    ) -> "Document":
+        print("Looking for history of document with ID:", document_id)
+        try:
+            documents = (
+                (
+                    await db.execute(
+                        select(cls)
+                        .where(cls.historic_id == document_id)
+                        .order_by(Document.updated_at.desc())
+                    )
+                )
+                .scalars()
+                .all()
+            )
+            if documents is None:
+                raise ValueError("No history found")
+            print("history length:", len(documents))
+        except ValueError as error:
+            raise error
+        return documents
+
+    @classmethod
     async def update_content_by_id(
         cls,
         db: AsyncSession,
@@ -124,6 +154,32 @@ class Document(BaseEntity):
 
             if document is None:
                 raise ValueError("Document not found")
+
+            historic_document = cls(
+                historic_id=document.id,
+                project_id=document.project_id,
+                component_id=document.component_id,
+                title=document.title,
+                sequence=document.sequence,
+                context=document.context,
+                html_content=document.html_content,
+                json_content=document.json_content,
+                interface_id=document.interface_id,
+                origin=document.origin,
+                created_by=document.created_by,
+                updated_by=document.updated_by,
+                uuid=str(uuid4()),
+                created_at=document.created_at,
+                updated_at=document.updated_at,
+            )
+            db.add(historic_document)  # Add the historic document to the session
+            await db.commit()  # Commit the changes to the database
+            # Clear the session to avoid stale data
+            # document.id = None  # Reset the ID for a new instance
+            # document.historic_id = id  # Set the historic ID to the old one
+            # document.uuid = str(uuid4())  # Generate a new UUID
+            # db.add(document)  # Add the new instance to the session
+            # await db.commit()  # Commit the changes to the database
             if title is not None:
                 document.title = title
             if sequence is not None:

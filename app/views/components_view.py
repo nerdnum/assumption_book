@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Annotated
 from copy import copy as shallow_copy
 from uuid import uuid4
+from datetime import datetime
 
 
 from app.views.auth_view import get_current_user_with_roles
@@ -172,42 +173,6 @@ async def get_component(
     return component
 
 
-async def do_copy_documents(
-    copied_id: int,
-    component_id: int,
-    project_id: int,
-    user_id: int,
-) -> None:
-    print(
-        f"Copying documents from component {copied_id} to {component_id}, project {project_id}, user {user_id}"
-    )
-    async with sessionmanager.session() as db:
-        original_documents = await SqlDocument.get_by_component_id(db, copied_id)
-        print(
-            f"Found {len(original_documents)} documents to copy from component {copied_id}"
-        )
-        # try:
-        if original_documents:
-            for document in original_documents:
-                print(f"Copying document {document.id}")
-                new_document_dict = {
-                    "project_id": project_id,
-                    "component_id": component_id,
-                    "title": document.title,
-                    "sequence": document.sequence,
-                    "context": document.context,
-                    "html_content": document.html_content,
-                    "json_content": document.json_content,
-                    "interface_id": document.interface_id,
-                    "user_id": user_id,
-                }
-                async with sessionmanager.session() as db:
-                    document = await SqlDocument.create(db, **new_document_dict)
-        # except Exception as error:
-        #     print("Error copying documents:", error)
-        #     raise ValueError("Error copying documents")
-
-
 @router.post(
     "/{parent_id:int}", response_model=Component, status_code=status.HTTP_201_CREATED
 )
@@ -244,10 +209,6 @@ async def create_component_by_parent_id(
         component = await SqlComponent.create(
             db, **component_dict, user_id=current_user.id
         )
-        if copied_id is not None and copy_documents:
-            await do_copy_documents(
-                copied_id, component.id, project_id, current_user.id
-            )
 
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error))
@@ -275,10 +236,6 @@ async def create_component(
         component = await SqlComponent.create(
             db, **component_dict, user_id=current_user.id
         )
-        if copied_id is not None and copy_documents:
-            await do_copy_documents(
-                copied_id, component.id, project_id, current_user.id
-            )
 
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error))

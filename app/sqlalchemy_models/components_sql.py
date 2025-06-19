@@ -1,4 +1,5 @@
 from uuid import uuid4
+import json
 
 from sqlalchemy import ForeignKey, Integer, String, func, select
 from sqlalchemy.exc import NoResultFound
@@ -9,6 +10,7 @@ from app.services.database import BaseEntity
 from app.services.utils import translate_exception
 from app.sqlalchemy_models.documents_sql import Document
 from app.sqlalchemy_models.user_project_role_sql import Project as SqlProject
+from app.services.utils import pretty_print
 
 
 class Component(AsyncAttrs, BaseEntity):
@@ -256,6 +258,36 @@ class Component(AsyncAttrs, BaseEntity):
             exception = translate_exception(__name__, "get", error)
             raise exception
         return component_html
+
+    @classmethod
+    async def get_parameters_json_by_component_id(cls, db, component_id: int) -> dict:
+        # Component id is unique in the datatable so project_id is irrelevant
+        try:
+            component = await db.get(cls, component_id)
+            if component is None:
+                raise ValueError("Component not found")
+
+            documents = await Document.get_by_component_id(db, component.id)
+            number_of_documents = len(documents)
+            component_dict = {"title": component.title, "documents": []}
+            for document in documents:
+                if document.context in ["parameters", "interface"]:
+                    component_dict["documents"].append(
+                        {
+                            "type": document.context,
+                            "document": document.json_content,
+                            "component_id": component.id,
+                        }
+                    )
+            if number_of_documents == 0:
+                print("component_dict")
+                pretty_print(component_dict)
+        except Exception as error:
+            if type(error) is ValueError:
+                raise error
+            exception = translate_exception(__name__, "get", error)
+            raise exception
+        return component_dict
 
     # @classmethod
     # async def get_hierarchy(cls, db, project_id: int, component_id: int = None, level: int = 0) -> any:

@@ -1,5 +1,6 @@
 import uuid
 from typing import Any, Dict, Optional
+from datetime import datetime
 
 from fastapi_camelcase import CamelModel
 from pydantic import ConfigDict, Json, field_validator, model_validator
@@ -204,3 +205,10 @@ class DocumentCount(CamelModel):
     project_id: int
     component_id: int
     count: int
+
+
+class DocumentWithUser(Document):
+    updated_at: Optional[datetime] = None
+    updated_by_id: Optional[int] = None
+    updated_by_full_name: Optional[str] = None
+    updated_by_email: Optional[str] = None

@@ -17,7 +17,7 @@ from app.pydantic_models.project_model import (
 from app.pydantic_models.role_model import Role
 from app.pydantic_models.user_model import ProjectWithUsers
 from app.pydantic_models.project_model import Project
-from app.services.create_docx import create_project_docx
+from app.services.create_docx import create_project_docx, create_project_xlsx
 from app.services.database import get_db
 from app.sqlalchemy_models.user_project_role_sql import Project as SqlProject
 from app.sqlalchemy_models.user_project_role_sql import User as SqlUser
@@ -73,14 +73,25 @@ async def create_project(
     return project
 
 
-@router.get("/docx", response_model=DocResponse)
-async def get_project_document_by_id(
-    spec: DocSpec,
-    db: AsyncSession = Depends(get_db),
-    current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
-) -> str:
-    document_path = await create_project_docx(spec, db)
-    return document_path
+## These functions were implement using websockets
+# @router.get("/docx", response_model=DocResponse)
+# async def get_project_document_by_id(
+#     spec: DocSpec,
+#     db: AsyncSession = Depends(get_db),
+#     current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
+# ) -> str:
+#     document_path = await create_project_docx(spec)
+#     return document_path
+
+
+# @router.get("/xlsx", response_model=DocResponse)
+# async def get_project_document_by_id(
+#     spec: DocSpec,
+#     db: AsyncSession = Depends(get_db),
+#     current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
+# ) -> str:
+#     document_path = await create_project_xlsx(spec)
+#     return document_path
 
 
 @router.get("/{id:int}", response_model=Project)

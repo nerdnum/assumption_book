@@ -7,7 +7,7 @@ from starlette.websockets import WebSocketDisconnect
 from app.pydantic_models.project_model import DocSpec
 from app.sqlalchemy_models.user_project_role_sql import User as SqlUser
 from app.views.auth_view import get_current_user_with_roles
-from app.services.create_docx import create_project_docx
+from app.services.create_docx import create_project_docx, create_project_xlsx
 
 router = APIRouter(prefix="/ws", tags=["websocket"])
 
@@ -18,6 +18,7 @@ async def process_data(websocket, message):
     try:
         json_message = json.loads(message)
         message_type = json_message.get("type")
+        document_type = json_message.get("documentType")
         if message_type is None:
             await websocket.send_text(str({"error": "No message type provided"}))
             return
@@ -26,7 +27,11 @@ async def process_data(websocket, message):
             return
         if message_type == "create_document":
             doc_spec = DocSpec.model_validate_json(message)
-            document_meta = await create_project_docx(doc_spec)
+            document_meta = None
+            if document_type == "docx":
+                document_meta = await create_project_docx(doc_spec)
+            elif document_type == "xlsx":
+                document_meta = await create_project_xlsx(doc_spec)
             await websocket.send_text(str(document_meta))
             return
     except json.JSONDecodeError as error:
