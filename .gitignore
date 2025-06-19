@@ -56,3 +56,11 @@ Visual*
 RiskManagement*.md
 fastapi_db*
 play_with*
+access.log
+app/views/error.log
+app/views/output.txt
+error.log
+log.log
+output.txt
+readme.txt
+gitignore.txt
