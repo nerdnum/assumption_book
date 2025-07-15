@@ -169,72 +169,7 @@ The backend employs the popular pyhon [fastapi](https://fastapi.tiangolo.com/) f
 			<details>
 				<summary><b>html2docx</b></summary>
 				<blockquote>
-					<div class='directory-path' style='padding: 8px 0; color: #666;'>
-						<code><b>⦿ app.html2docx</b></code>
-					<table style='width: 100%; border-collapse: collapse;'>
-					<thead>
-						<tr style='background-color: #f8f9fa;'>
-							<th style='width: 30%; text-align: left; padding: 8px;'>File Name</th>
-							<th style='text-align: left; padding: 8px;'>Summary</th>
-						</tr>
-					</thead>
-						<tr style='border-bottom: 1px solid #eee;'>
-							<td style='padding: 8px;'><b><a href='https://github.com/CWPTech/assumptions-backend.git/blob/master/app/html2docx/LICENSE'>LICENSE</a></b></td>
-							<td style='padding: 8px;'>Code>❯ REPLACE-ME</code></td>
-						</tr>
-						<tr style='border-bottom: 1px solid #eee;'>
-							<td style='padding: 8px;'><b><a href='https://github.com/CWPTech/assumptions-backend.git/blob/master/app/html2docx/requirements.txt'>requirements.txt</a></b></td>
-							<td style='padding: 8px;'>Code>❯ REPLACE-ME</code></td>
-						</tr>
-					</table>
-					<!-- htmldocx Submodule -->
-					<details>
-						<summary><b>htmldocx</b></summary>
-						<blockquote>
-							<div class='directory-path' style='padding: 8px 0; color: #666;'>
-								<code><b>⦿ app.html2docx.htmldocx</b></code>
-							<table style='width: 100%; border-collapse: collapse;'>
-							<thead>
-								<tr style='background-color: #f8f9fa;'>
-									<th style='width: 30%; text-align: left; padding: 8px;'>File Name</th>
-									<th style='text-align: left; padding: 8px;'>Summary</th>
-								</tr>
-							</thead>
-								<tr style='border-bottom: 1px solid #eee;'>
-									<td style='padding: 8px;'><b><a href='https://github.com/CWPTech/assumptions-backend.git/blob/master/app/html2docx/htmldocx/h2d.py'>h2d.py</a></b></td>
-									<td style='padding: 8px;'>Code>❯ REPLACE-ME</code></td>
-								</tr>
-							</table>
-						</blockquote>
-					</details>
-					<!-- .github Submodule -->
-					<details>
-						<summary><b>.github</b></summary>
-						<blockquote>
-							<div class='directory-path' style='padding: 8px 0; color: #666;'>
-								<code><b>⦿ app.html2docx..github</b></code>
-							<!-- workflows Submodule -->
-							<details>
-								<summary><b>workflows</b></summary>
-								<blockquote>
-									<div class='directory-path' style='padding: 8px 0; color: #666;'>
-										<code><b>⦿ app.html2docx..github.workflows</b></code>
-									<table style='width: 100%; border-collapse: collapse;'>
-									<thead>
-										<tr style='background-color: #f8f9fa;'>
-											<th style='width: 30%; text-align: left; padding: 8px;'>File Name</th>
-											<th style='text-align: left; padding: 8px;'>Summary</th>
-										</tr>
-									</thead>
-										<tr style='border-bottom: 1px solid #eee;'>
-											<td style='padding: 8px;'><b><a href='https://github.com/CWPTech/assumptions-backend.git/blob/master/app/html2docx/.github/workflows/python-app.yml'>python-app.yml</a></b></td>
-											<td style='padding: 8px;'>Code>❯ REPLACE-ME</code></td>
-										</tr>
-									</table>
-								</blockquote>
-							</details>
-						</blockquote>
-					</details>
+					Look at documention found at [html2docx](https://github.com/pqzx/html2docx)
 				</blockquote>
 			</details>
 			<!-- sqlalchemy_models Submodule -->
@@ -243,6 +178,7 @@ The backend employs the popular pyhon [fastapi](https://fastapi.tiangolo.com/) f
 				<blockquote>
 					<div class='directory-path' style='padding: 8px 0; color: #666;'>
 						<code><b>⦿ app.sqlalchemy_models</b></code>
+						<p>Contains all the models for reading and writing to the database.</p>
 					<table style='width: 100%; border-collapse: collapse;'>
 					<thead>
 						<tr style='background-color: #f8f9fa;'>
@@ -252,23 +188,23 @@ The backend employs the popular pyhon [fastapi](https://fastapi.tiangolo.com/) f
 					</thead>
 						<tr style='border-bottom: 1px solid #eee;'>
 							<td style='padding: 8px;'><b><a href='https://github.com/CWPTech/assumptions-backend.git/blob/master/app/sqlalchemy_models/documents_sql.py'>documents_sql.py</a></b></td>
-							<td style='padding: 8px;'>Code>❯ REPLACE-ME</code></td>
+							<td style='padding: 8px;'>For managing documents in the DB</td>
 						</tr>
 						<tr style='border-bottom: 1px solid #eee;'>
 							<td style='padding: 8px;'><b><a href='https://github.com/CWPTech/assumptions-backend.git/blob/master/app/sqlalchemy_models/settings_sql.py'>settings_sql.py</a></b></td>
-							<td style='padding: 8px;'>Code>❯ REPLACE-ME</code></td>
+							<td style='padding: 8px;'>For managing settings in the DB</td>
 						</tr>
 						<tr style='border-bottom: 1px solid #eee;'>
 							<td style='padding: 8px;'><b><a href='https://github.com/CWPTech/assumptions-backend.git/blob/master/app/sqlalchemy_models/setting_types_sql.py'>setting_types_sql.py</a></b></td>
-							<td style='padding: 8px;'>Code>❯ REPLACE-ME</code></td>
+							<td style='padding: 8px;'>For managing setting types in the DB</td>
 						</tr>
 						<tr style='border-bottom: 1px solid #eee;'>
 							<td style='padding: 8px;'><b><a href='https://github.com/CWPTech/assumptions-backend.git/blob/master/app/sqlalchemy_models/components_sql.py'>components_sql.py</a></b></td>
-							<td style='padding: 8px;'>Code>❯ REPLACE-ME</code></td>
+							<td style='padding: 8px;'>For managing components in the DB</td>
 						</tr>
 						<tr style='border-bottom: 1px solid #eee;'>
 							<td style='padding: 8px;'><b><a href='https://github.com/CWPTech/assumptions-backend.git/blob/master/app/sqlalchemy_models/user_project_role_sql.py'>user_project_role_sql.py</a></b></td>
-							<td style='padding: 8px;'>Code>❯ REPLACE-ME</code></td>
+							<td style='padding: 8px;'>For managing projects, users and roles in the DB</td>
 						</tr>
 					</table>
 				</blockquote>
