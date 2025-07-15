@@ -37,10 +37,6 @@
     - [Installation](#installation)
     - [Usage](#usage)
     - [Testing](#testing)
-- [Roadmap](#roadmap)
-- [Contributing](#contributing)
-- [License](#license)
-- [Acknowledgments](#acknowledgments)
 
 ---
 
