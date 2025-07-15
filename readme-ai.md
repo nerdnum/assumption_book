@@ -27,7 +27,7 @@
 
 ## Overview
 
-The backend employs the popular pyhon [fastapi](https://fastapi.tiangolo.com/) framwork.
+The backend employs the popular pyhon [fastapi](https://fastapi.tiangolo.com/) framework.
 
 ---
 
@@ -114,35 +114,35 @@ The backend employs the popular pyhon [fastapi](https://fastapi.tiangolo.com/) f
 			</thead>
 				<tr style='border-bottom: 1px solid #eee;'>
 					<td style='padding: 8px;'><b><a href='https://github.com/CWPTech/assumptions-backend.git/blob/master/run.py'>run.py</a></b></td>
-					<td style='padding: 8px;'>Code>❯ REPLACE-ME</code></td>
+					<td style='padding: 8px;'>Run the project</td>
 				</tr>
 				<tr style='border-bottom: 1px solid #eee;'>
 					<td style='padding: 8px;'><b><a href='https://github.com/CWPTech/assumptions-backend.git/blob/master/create_user_roles.py'>create_user_roles.py</a></b></td>
-					<td style='padding: 8px;'>Code>❯ REPLACE-ME</code></td>
+					<td style='padding: 8px;'>A script that can be used to create roles directly in the DB from the command line.</td>
 				</tr>
 				<tr style='border-bottom: 1px solid #eee;'>
 					<td style='padding: 8px;'><b><a href='https://github.com/CWPTech/assumptions-backend.git/blob/master/pytest.ini'>pytest.ini</a></b></td>
-					<td style='padding: 8px;'>Code>❯ REPLACE-ME</code></td>
+					<td style='padding: 8px;'>Testing init</td>
 				</tr>
 				<tr style='border-bottom: 1px solid #eee;'>
 					<td style='padding: 8px;'><b><a href='https://github.com/CWPTech/assumptions-backend.git/blob/master/requirements.txt'>requirements.txt</a></b></td>
-					<td style='padding: 8px;'>Code>❯ REPLACE-ME</code></td>
+					<td style='padding: 8px;'>Libraries used by the project and used by PIP to install all the dependencies</td>
 				</tr>
 				<tr style='border-bottom: 1px solid #eee;'>
 					<td style='padding: 8px;'><b><a href='https://github.com/CWPTech/assumptions-backend.git/blob/master/DECISION_LOG.txt'>DECISION_LOG.txt</a></b></td>
-					<td style='padding: 8px;'>Code>❯ REPLACE-ME</code></td>
+					<td style='padding: 8px;'>Good intention only :-)</td>
 				</tr>
 				<tr style='border-bottom: 1px solid #eee;'>
 					<td style='padding: 8px;'><b><a href='https://github.com/CWPTech/assumptions-backend.git/blob/master/alembic.ini'>alembic.ini</a></b></td>
-					<td style='padding: 8px;'>Code>❯ REPLACE-ME</code></td>
+					<td style='padding: 8px;'>For doing automated database migrations</td>
 				</tr>
 				<tr style='border-bottom: 1px solid #eee;'>
 					<td style='padding: 8px;'><b><a href='https://github.com/CWPTech/assumptions-backend.git/blob/master/alembichelp.py'>alembichelp.py</a></b></td>
-					<td style='padding: 8px;'>Code>❯ REPLACE-ME</code></td>
+					<td style='padding: 8px;'>Not used</td>
 				</tr>
 				<tr style='border-bottom: 1px solid #eee;'>
 					<td style='padding: 8px;'><b><a href='https://github.com/CWPTech/assumptions-backend.git/blob/master/alembic_steps.text'>alembic_steps.text</a></b></td>
-					<td style='padding: 8px;'>Code>❯ REPLACE-ME</code></td>
+					<td style='padding: 8px;'>A reminder of how to use alembic DB migration tool</td>
 				</tr>
 			</table>
 		</blockquote>
@@ -162,7 +162,7 @@ The backend employs the popular pyhon [fastapi](https://fastapi.tiangolo.com/) f
 			</thead>
 				<tr style='border-bottom: 1px solid #eee;'>
 					<td style='padding: 8px;'><b><a href='https://github.com/CWPTech/assumptions-backend.git/blob/master/app/config.py'>config.py</a></b></td>
-					<td style='padding: 8px;'>Code>❯ REPLACE-ME</code></td>
+					<td style='padding: 8px;'>Reads config.json file and makes it available to the broader project</td>
 				</tr>
 			</table>
 			<!-- html2docx Submodule -->
