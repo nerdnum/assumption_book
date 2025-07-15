@@ -665,11 +665,11 @@ The ```app/html2docx``` folder is a clone of the html2docx project [html2docx](h
 
 ### Usage
 
-Run the project with:
+Run the project in development mode with:
 
 **Using [pip](https://pypi.org/project/pip/):**
 ```sh
-python {entrypoint}
+uvicorn run:server 
 ```
 
 ### Testing
