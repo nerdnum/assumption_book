@@ -27,13 +27,16 @@
 
 ## Overview
 
-
+The backend employs the popular pyhon [fastapi](https://fastapi.tiangolo.com/) framwork.
 
 ---
 
 ## Features
 
-<code>❯ REPLACE-ME</code>
+- User management with rolebased access to the app features
+- Create a tree structure for the project components
+- User create documentation regarding the project
+- Documentation can be exported to docx and xlsx
 
 ---
 
