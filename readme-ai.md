@@ -659,8 +659,9 @@ Build assumptions-backend.git from the source and intsall dependencies:
 	**Using [pip](https://pypi.org/project/pip/):**
 
 	```sh
-	❯ pip install -r requirements.txt, app/html2docx/requirements.txt
+	❯ pip install -r requirements.txt
 	```
+The ```app/html2docx``` folder is a clone of the html2docx project [html2docx](https://github.com/pqzx/html2docx). Unfortunately the reason for using the cloned folder instead of the most recent version of the library is lost.
 
 ### Usage
 
