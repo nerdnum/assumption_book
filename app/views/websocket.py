@@ -26,6 +26,7 @@ async def process_data(websocket, message):
             await websocket.send_text(str({"error": "Unknown message type"}))
             return
         if message_type == "create_document":
+
             doc_spec = DocSpec.model_validate_json(message)
             document_meta = None
             if document_type == "docx":

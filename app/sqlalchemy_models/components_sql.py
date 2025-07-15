@@ -63,6 +63,7 @@ class Component(AsyncAttrs, BaseEntity):
     async def create(
         cls,
         db,
+        user_id: int,
         project_id: int,
         parent_id: int,
         title: str,
@@ -70,7 +71,6 @@ class Component(AsyncAttrs, BaseEntity):
         structure_code: str | None = None,
         sequence: int | None = None,
         description: str | None = None,
-        user_id: int | None = None,
     ) -> "Component":
 
         project = await SqlProject.get_project_by_id(db, project_id)
@@ -157,6 +157,7 @@ class Component(AsyncAttrs, BaseEntity):
     async def update(
         cls,
         db,
+        user_id: int,
         component_id: int,
         id: int,
         uuid: str,
@@ -167,7 +168,6 @@ class Component(AsyncAttrs, BaseEntity):
         structure_code: str = None,
         parent_id: int = None,
         description: str = None,
-        user_id: int = None,
     ) -> "Component":
         component = await cls.get_by_id(db, component_id)
 
@@ -279,9 +279,6 @@ class Component(AsyncAttrs, BaseEntity):
                             "component_id": component.id,
                         }
                     )
-            if number_of_documents == 0:
-                print("component_dict")
-                pretty_print(component_dict)
         except Exception as error:
             if type(error) is ValueError:
                 raise error

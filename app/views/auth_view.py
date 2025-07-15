@@ -8,6 +8,8 @@ from fastapi.security.utils import get_authorization_scheme_param
 from fastapi_camelcase import CamelModel
 from passlib.context import CryptContext
 from pydantic import BaseModel
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.security.base import SecurityBase
@@ -44,12 +46,14 @@ class SnakeTokenResponse(BaseModel):
     access_token: str
     token_type: str
     refresh_token: str | None = None
+    expiration_time: int | None = None
 
 
 class CamelTokenResponse(CamelModel):
     access_token: str
     token_type: str
     refresh_token: str | None = None
+    expiration_time: int | None = None
 
 
 class Password(CamelModel):
@@ -191,24 +195,6 @@ async def get_current_user_with_roles(
     user: Annotated[SqlUser, Depends(get_current_user)],
     request: Request,
 ):
-
-    user_projects = [project.id for project in user.projects]
-    project_id = request.query_params.get("project_id")
-    if project_id is None:
-        project_id = request.path_params.get("project_id")
-    if project_id is not None:
-        try:
-            check_id = int(project_id)
-            if check_id not in user_projects:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="User does not have access to this project",
-                )
-        except ValueError:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid project id",
-            )
     return user
 
 
@@ -331,7 +317,7 @@ async def set_password(
     try:
         hashed_password = get_password_hash(password.password)
         user = await SqlUser.set_password(
-            db, current_user.id, hashed_password, current_user.id
+            db, current_user.id, current_user.id, hashed_password
         )
     except NoResultFound:
         raise HTTPException(status_code=400, detail="User not found")
@@ -371,4 +357,8 @@ async def get_password_token(
         )
     except Exception as error:
         raise HTTPException(status_code=400, detail=str(error))
-    return {"access_token": password_token, "token_type": "Bearer"}
+    return {
+        "access_token": password_token,
+        "token_type": "Bearer",
+        "expiration_time": access_token_expire_minutes,
+    }

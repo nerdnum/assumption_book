@@ -87,7 +87,7 @@ class DocumentBase(AsyncValidationModelMixin, CamelModel):
 
     async def check_for_duplicate_title_in_base(self, value: str):
         async with sessionmanager.session() as session:
-            if value.lower() != "interface":
+            if value.lower() != "interface" and value.lower() != "information":
                 document = (
                     (
                         await session.execute(

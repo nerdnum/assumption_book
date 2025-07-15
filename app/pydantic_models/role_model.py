@@ -4,19 +4,18 @@ from fastapi_camelcase import CamelModel
 
 
 class RoleBase(CamelModel):
-    name: str
+    name: str | None = None
     description: str | None = None
+    is_active: Optional[bool] = True
     is_system_role: Optional[bool] = False
 
 
 class RoleUpdate(RoleBase):
-    name: Optional[str] = None
-    description: Optional[str] = None
-    is_system_role: Optional[bool] = None
+    pass
 
 
 class RoleCreate(RoleBase):
-    pass
+    name: str
 
 
 class Role(RoleBase):
@@ -27,8 +26,9 @@ class Role(RoleBase):
         from_attributes = True
 
 
-class RoleInDB(Role):
-    is_active: bool = True
+class SimpleRole(CamelModel):
+    id: int
+    name: str
 
 
 # class RoleWithUsers(Role):

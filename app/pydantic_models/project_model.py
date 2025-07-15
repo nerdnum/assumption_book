@@ -36,11 +36,19 @@ class ProjectBasicInfo(CamelModel):
     id: int
     uuid: str
     title: str
+    image_url: str | None = None
+    logo_url: str | None = None
     description: str | None = None
 
 
-class ProjectWithRoles(Project):
-    roles: list["Role"] = []
+class ProjectMinimalInfo(CamelModel):
+    id: int
+    uuid: str
+    title: str
+
+
+class ProjectWithProjectRoles(ProjectBasicInfo):
+    project_roles: list["Role"] = []
 
 
 class RoleWithProjects(Role):
@@ -54,6 +62,7 @@ class CompSpec(CamelModel):
 class DocSpec(CamelModel):
     type: str
     project_id: int
+    document_type: str
     components: list[CompSpec]
 
     class Config:
@@ -64,3 +73,14 @@ class DocResponse(CamelModel):
     status: str
     name: str
     url: str
+
+    class Config:
+        from_attributes = True
+
+
+class RoleRequest(CamelModel):
+    project_id: int
+    role_id: int
+
+    class Config:
+        from_attributes = True

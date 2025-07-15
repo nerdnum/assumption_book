@@ -17,10 +17,6 @@ from app.sqlalchemy_models import (
     setting_types_sql,
     settings_sql,
     user_project_role_sql,
-    risk_types_sql,
-    risks_impacts_sql,
-    risk_probabilities_sql,
-    risks_sql,
 )
 
 

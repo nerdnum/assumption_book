@@ -40,11 +40,11 @@ class Setting(BaseEntity):
     async def create(
         cls,
         db: AsyncSession,
+        user_id: int,
         title: str,
         description: str | None,
         value: str,
         setting_type_id: int,
-        user_id: int | None = None,
     ) -> "Setting":
 
         setting = cls(
@@ -109,12 +109,12 @@ class Setting(BaseEntity):
     async def update(
         cls,
         db: AsyncSession,
+        user_id: int,
         id: int,
         title: str | None,
         description: str | None,
         value: str | None,
         setting_type_id: int | None,
-        user_id: int | None = None,
     ) -> "Setting":
         try:
 

@@ -18,8 +18,7 @@ from app.sqlalchemy_models.user_project_role_sql import Project as SqlProject
 
 
 def processHtml(html):
-    file_like_html = BytesIO(html.encode())
-    tree = etree.parse(file_like_html, etree.HTMLParser())
+    tree = etree.HTML(html)
     images = tree.xpath("//img")
     cwd = os.getcwd()
     if len(images) > 0:
@@ -28,7 +27,9 @@ def processHtml(html):
             _, path = src.split("/static/document_images/")
             store_path = os.path.join(cwd, "app", "static", "document_images", path)
             image.attrib["src"] = store_path
-    html_string = etree.tostring(tree).decode().replace("\n", "")
+    html_string = (
+        etree.tostring(tree, encoding="utf-8").decode("utf-8").replace("\n", "")
+    )
     return html_string
 
 
@@ -53,7 +54,7 @@ async def create_project_docx(spec):
         docx.save(store_path)
         store_path = os.path.join(cwd, "app", "static", "docx", f"{doc_name}.html")
         url_path = os.path.join("static", "docx", f"{doc_name}.docx")
-        with open(store_path, "w") as file:
+        with open(store_path, "w", encoding="utf-8") as file:
             file.write(final_html)
 
         return json.dumps(
@@ -111,13 +112,14 @@ heading = Font(bold=True, name="Arial", size=12)
 
 
 async def create_project_xlsx(spec):
-    print(spec)
     async with sessionmanager.session() as db:
         project = await SqlProject.get_project_by_id(db, spec.project_id)
         workbook = Workbook()
         view = [BookView(xWindow=0, yWindow=0, windowWidth=27210, windowHeight=23310)]
         workbook.views = view
         del workbook["Sheet"]  # Remove the default sheet
+
+        spec_count = 0
 
         for component_spec in spec.components:
             component = await SqlComponent.get_by_id(db, component_spec.id)
@@ -126,6 +128,7 @@ async def create_project_xlsx(spec):
                 db, component_spec.id
             )
             if len(component_json["documents"]) > 0:
+                spec_count += 1
                 workbook.create_sheet(title=component_json["title"])
                 worksheet = workbook[component_json["title"]]
                 worksheet.column_dimensions["A"].width = 30
@@ -144,10 +147,8 @@ async def create_project_xlsx(spec):
                         interfaceDef = block["document"].get("interfacedComponent", {})
                         if interfaceDef:
                             if component_id == interfaceDef.get("componentOneId"):
-                                print("is same")
                                 title = f"Interface: {interfaceDef.get('componentOneTitle', '')} with {interfaceDef.get('componentTwoTitle', '')}"
                             else:
-                                print("is different")
                                 title = f"Interface: {interfaceDef.get('componentTwoTitle', '')} with {interfaceDef.get('componentOneTitle', '')}"
 
                     description = block["document"].get("description", "")
@@ -208,6 +209,21 @@ async def create_project_xlsx(spec):
                     worksheet.append([])
                     row_count += 1
         # Set the first sheet as active
+        if spec_count > 0:
+            workbook.active = 0
+        else:
+            worksheet = workbook.create_sheet(title="No Components")
+            worksheet.append(
+                [
+                    "No components with parameter or interface tables found for this project."
+                ]
+            )
+            worksheet.append(
+                [
+                    "Please add parameter or interface tables to components to see content in this spreadsheet document."
+                ]
+            )
+            worksheet.append([" "])
         cwd = os.getcwd()
         suffix = datetime.now().strftime("%M%S")
         doc_name = f'{project.title.replace(" ", "_").lower()}_{suffix}'

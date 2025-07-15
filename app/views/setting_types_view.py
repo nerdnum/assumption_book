@@ -33,7 +33,7 @@ async def create_setting_type(
 ):
     try:
         setting_type = await SqlSettingType.create(
-            db, **setting_type.model_dump(), user_id=current_user.id
+            db, user_id=current_user.id, **setting_type.model_dump()
         )
     except HTTPException:
         raise
@@ -58,12 +58,15 @@ async def get_setting(
 @router.put("/{id}", response_model=SettingType)
 async def update_setting(
     id: int,
+    user_id: int,
     setting_type: SettingTypeUpdate,
     db: AsyncSession = Depends(get_db),
     current_user: Annotated[SqlUser, Depends(get_current_user_with_roles)] = None,
 ):
     try:
-        setting_type = await SqlSettingType.update(db, id, **setting_type.model_dump())
+        setting_type = await SqlSettingType.update(
+            db, user_id, id, **setting_type.model_dump()
+        )
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error))
     return setting_type

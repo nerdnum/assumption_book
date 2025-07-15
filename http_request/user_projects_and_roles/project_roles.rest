@@ -16,7 +16,6 @@ Content-Type: application/json
 {
     "description": "Is a project member",
     "name": "Member",
-    "is_system_role": true
 }
 
 ### Add role to project

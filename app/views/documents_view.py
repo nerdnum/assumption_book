@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from pydantic_async_validation.fastapi import ensure_request_validation_errors
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, label
+from sqlalchemy import select, or_
 
 from app.pydantic_models.document_model import (
     Document,
@@ -99,7 +99,12 @@ async def get_documents_by_component_id(
                     SqlUser.email.label("updated_by_email"),
                 )
                 .join(SqlUser, SqlUser.id == SqlDocument.updated_by)
-                .where(SqlDocument.component_id == component_id)
+                .where(
+                    or_(
+                        SqlDocument.component_id == component_id,
+                        SqlDocument.interface_id == component_id,
+                    )
+                )
                 .where(SqlDocument.historic_id == None)
                 .order_by(SqlDocument.sequence)
             )
@@ -156,7 +161,7 @@ async def create_document(
         with ensure_request_validation_errors("body"):
             await document.model_async_validate()
         document = await SqlDocument.create(
-            db, **document.model_dump(), user_id=current_user.id
+            db, user_id=current_user.id, **document.model_dump()
         )
         document_dict = document.__dict__
 
@@ -401,6 +406,7 @@ async def do_interface_copy(
         "interface_id": new_interface_id,
         "origin": origin_dict,
     }
+
     async with sessionmanager.session() as db:
         new_document = await SqlDocument.create(db, **new_document_dict)
         return {
@@ -421,8 +427,7 @@ async def copy_documents(
     """
     results = []
     for record in copy_records:
-        pretty_print(record)
-        if record.do_copy_documents:
+        if record.copy_documents:
             original_documents = await SqlDocument.get_by_component_id(
                 db, record.from_id
             )

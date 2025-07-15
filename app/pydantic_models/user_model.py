@@ -6,35 +6,35 @@ from pydantic import EmailStr
 
 from app.pydantic_models.project_model import (
     Project,
-    ProjectWithRoles,
+    ProjectMinimalInfo,
     ProjectBasicInfo,
+    ProjectWithProjectRoles,
 )
-from app.pydantic_models.role_model import Role
+from app.pydantic_models.role_model import SimpleRole
 
 
 class UserBase(CamelModel):
-    full_name: str
-    username: Optional[str] = None
-    preferred_name: Optional[str] = None
-    email: EmailStr
-    is_active: Optional[bool] = None
-    is_superuser: Optional[bool] = None
+    full_name: str | None = None
+    preferred_name: str | None = None
+    email: EmailStr | None = None
+    is_active: bool | None = None
+    is_superuser: bool | None = False
 
     class Config:
         from_attributes = True
 
 
 class UserUpdate(UserBase):
-    full_name: Optional[str] = None
-    username: Optional[str] = None
-    preferred_name: Optional[str] = None
-    email: Optional[EmailStr] = None
-    is_active: Optional[bool] = None
-    is_superuser: Optional[bool] = None
+    pass
+    system_roles: list[SimpleRole] = []
 
 
 class UserCreate(UserBase):
-    pass
+    full_name: str
+    preferred_name: str
+    email: EmailStr
+    is_active: Optional[bool] = True
+    system_roles: list[SimpleRole] = []
 
 
 class User(UserBase):
@@ -53,6 +53,7 @@ class FullUser(User):
     updated_at: Optional[datetime] = None
     created_by: Optional[int] = None
     updated_by: Optional[int] = None
+    system_roles: list[SimpleRole] = []
 
 
 class UserInDB(User):
@@ -60,17 +61,17 @@ class UserInDB(User):
     is_active: bool = True
 
 
-class UserWithProjects(User):
-    projects: list["ProjectBasicInfo"] = []
-
-
-class ProjectWithUsers(Project):
-    users: list[User] = []
-
-
-class UserWithRoles(User):
-    roles: list["Role"] = []
-
-
 class UserWithProjectRoles(User):
-    projects: list["ProjectWithRoles"] = []
+    project_roles: list["SimpleRole"] = []
+
+
+class UserWithSystemRoles(User):
+    system_roles: list["SimpleRole"] = []
+
+
+class UserWithProjectsAndSystemRoles(User):
+    projects: list["ProjectWithProjectRoles"] = []
+    system_roles: list["SimpleRole"] = []
+
+    class Config:
+        from_attributes = True

@@ -36,6 +36,7 @@ class Document(BaseEntity):
     async def create(
         cls,
         db: AsyncSession,
+        user_id: int,
         project_id: int,
         component_id: int,
         title: str,
@@ -44,7 +45,6 @@ class Document(BaseEntity):
         html_content: str | None,
         json_content: dict | None,
         interface_id: int | None,
-        user_id: int | None = None,
         origin: dict | None = None,
     ) -> "Document":
         document = cls(
@@ -67,7 +67,6 @@ class Document(BaseEntity):
             await db.refresh(document)
         except IntegrityError as error:
             await db.rollback()
-            print("sql:create", error)
             raise ValueError("Document with this title already exists")
         return document
 
@@ -114,7 +113,6 @@ class Document(BaseEntity):
         db: AsyncSession,
         document_id: int,
     ) -> "Document":
-        print("Looking for history of document with ID:", document_id)
         try:
             documents = (
                 (
@@ -129,7 +127,6 @@ class Document(BaseEntity):
             )
             if documents is None:
                 raise ValueError("No history found")
-            print("history length:", len(documents))
         except ValueError as error:
             raise error
         return documents

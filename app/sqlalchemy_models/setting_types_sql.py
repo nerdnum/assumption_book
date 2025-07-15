@@ -29,10 +29,10 @@ class SettingType(BaseEntity):
     async def create(
         cls,
         db: AsyncSession,
+        user_id: int,
         title: str,
         description: str | None,
         default_text: str | None,
-        user_id: int,
     ) -> "SettingType":
         setting_type = cls(
             title=title,
@@ -47,8 +47,6 @@ class SettingType(BaseEntity):
             await db.commit()
             await db.refresh(setting_type)
         except IntegrityError as error:
-            print("Found Integrity Error")
-            print(error)
             await db.rollback()
             error_str = str(error)
             if (
@@ -82,6 +80,7 @@ class SettingType(BaseEntity):
     async def update(
         cls,
         db: AsyncSession,
+        user_id: int,
         id: int,
         title: str,
         description: str | None,
@@ -97,11 +96,10 @@ class SettingType(BaseEntity):
                 setting_type.description = description
             if default_text is not None:
                 setting_type.default_text = default_text
-            print(setting_type)
+            setting_type.updated_by = user_id
             await db.commit()
             await db.refresh(setting_type)
         except Exception as error:
-            print(error)
             raise error
         # except NoResultFound:
         #     raise ValueError("Setting type not found")
@@ -130,7 +128,6 @@ class SettingType(BaseEntity):
             await db.delete(setting_type)
             await db.commit()
         except NoResultFound:
-            print("No result found")
             raise ValueError("Setting type not found")
         except Exception:
             await db.rollback()

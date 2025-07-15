@@ -39,7 +39,7 @@ async def create_setting(
 ):
     try:
         setting = await SqlSetting.create(
-            db, **setting.model_dump(), user_id=current_user.id
+            db, user_id=current_user.id, **setting.model_dump()
         )
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error))
@@ -68,7 +68,7 @@ async def update_setting(
 ):
     try:
         setting = await SqlSetting.update(
-            db, id, **setting.model_dump(), user_id=current_user.id
+            db, user_id=current_user.id, id=id, **setting.model_dump()
         )
     except ValueError as error:
         raise HTTPException(status_code=404, detail=str(error))

@@ -22,7 +22,6 @@ from app.pydantic_models.component_model import (
 )
 from app.pydantic_models.document_model import DocumentCreate
 from app.services.database import get_db, sessionmanager
-from app.services.utils import pretty_print
 from app.sqlalchemy_models.components_sql import Component as SqlComponent
 from app.sqlalchemy_models.documents_sql import Document as SqlDocument
 
@@ -207,7 +206,9 @@ async def create_component_by_parent_id(
         copied_id = component_dict.pop("copied_id", None)
         copy_documents = component_dict.pop("copy_documents", False)
         component = await SqlComponent.create(
-            db, **component_dict, user_id=current_user.id
+            db,
+            user_id=current_user.id,
+            **component_dict,
         )
 
     except ValueError as error:
@@ -234,7 +235,7 @@ async def create_component(
         copied_id = component_dict.pop("copied_id", None)
         copy_documents = component_dict.pop("copy_documents", False)
         component = await SqlComponent.create(
-            db, **component_dict, user_id=current_user.id
+            db, user_id=current_user.id, **component_dict
         )
 
     except ValueError as error:
@@ -263,7 +264,10 @@ async def update_component_by_id(
         with ensure_request_validation_errors("body"):
             await updated_component.model_async_validate()
         component = await SqlComponent.update(
-            db, component_id, **updated_component.model_dump(), user_id=current_user.id
+            db,
+            user_id=current_user.id,
+            component_id=component_id,
+            **updated_component.model_dump(),
         )
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error))
