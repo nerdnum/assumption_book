@@ -674,20 +674,14 @@ uvicorn run:server
 
 ### Testing
 
-Assumptions-backend.git uses the {__test_framework__} test framework. Run the test suite with:
+Assumptions-backend.git uses the [pytest](https://docs.pytest.org/en/stable/) testing framework. Run the test suite with:
 
 **Using [pip](https://pypi.org/project/pip/):**
 ```sh
 pytest
 ```
 
----
-
-## Roadmap
-
-- [X] **`Task 1`**: <strike>Implement feature one.</strike>
-- [ ] **`Task 2`**: Implement feature two.
-- [ ] **`Task 3`**: Implement feature three.
+Towards the end of development, the test files for the API was not kept up to date, so most of the test are likely to fail, however, it can provide a good starting point for testing as the core configuration is done.
 
 ---
 
