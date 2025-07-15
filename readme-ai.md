@@ -3,22 +3,7 @@
 <!-- HEADER STYLE: CLASSIC -->
 <div align="center">
 
-<img src="readmeai/assets/logos/purple.svg" width="30%" style="position: relative; top: 0; right: 0;" alt="Project Logo"/>
-
 # ASSUMPTIONS-BACKEND.GIT
-
-<em></em>
-
-<!-- BADGES -->
-<img src="https://img.shields.io/github/license/CWPTech/assumptions-backend.git?style=default&logo=opensourceinitiative&logoColor=white&color=0080ff" alt="license">
-<img src="https://img.shields.io/github/last-commit/CWPTech/assumptions-backend.git?style=default&logo=git&logoColor=white&color=0080ff" alt="last-commit">
-<img src="https://img.shields.io/github/languages/top/CWPTech/assumptions-backend.git?style=default&color=0080ff" alt="repo-top-language">
-<img src="https://img.shields.io/github/languages/count/CWPTech/assumptions-backend.git?style=default&color=0080ff" alt="repo-language-count">
-
-<!-- default option, no dependency badges. -->
-
-
-<!-- default option, no dependency badges. -->
 
 </div>
 <br>
